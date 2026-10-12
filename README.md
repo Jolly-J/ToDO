@@ -1,28 +1,64 @@
-# ToDO 任务管理器
+<p align="center">
+  <img src="assets/logo.svg" alt="ToDO 任务管理器 Logo" width="320" />
+</p>
 
-> 现代化的企业级任务协同、团队排期与钉钉深度集成平台。
+<h3 align="center">ToDO 任务管理器</h3>
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg)](https://nodejs.org)
-[![React Version](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org)
+<p align="center">
+  现代化的企业级任务协同、团队排期与钉钉深度集成平台。
+</p>
+
+<p align="center">
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
+  <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg" alt="Node.js Version" /></a>
+  <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-blue.svg" alt="React 19" /></a>
+  <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.9-blue.svg" alt="TypeScript 5.9" /></a>
+  <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/TailwindCSS-4-38bdf8.svg" alt="Tailwind CSS 4" /></a>
+</p>
+
+---
+
+<p align="center">
+  <img src="assets/product-hero-macbook.png" alt="ToDO 任务管理器 产品主视觉" width="920" />
+</p>
 
 **ToDO**（ToDO 任务管理器）是一套专为团队日常协同与督办场景打造的高效任务管理系统。系统深度整合钉钉生态，提供直观的看板、排期甘特图、全员负荷驾驶舱与细粒度权限管控，帮助团队建立“件件有着落、事事有回音”的现代化数字协同文化。
 
 ---
 
-## 🌟 核心特性
+## 🌟 核心特性展示
 
-- **多维视图协同**：支持经典列表、看板拖拽、日历概览、甘特排期与团队驾驶舱多视图无缝切换。
-- **钉钉生态深度集成**（当前重点支持）：
-  - **无缝免登**：支持钉钉移动端与 PC 端工作台一键免登，体验原生级顺滑。
-  - **扫码登录**：支持在常规桌面浏览器通过钉钉扫码快速登录。
-  - **智能卡片通知**：基于单聊机器人推送 Markdown 结构化卡片与 ActionCard，支持任务指派、状态流转、变更聚合与催办提醒。
-  - **组织架构同步**：支持定时自动同步企业部门与员工通讯录，免除手动维护成本。
-- **细粒度权限治理**：内置完善的 RBAC 角色体系，支持多组织空间、团队角色与全局管理，提供精准的数据范围（全部 / 部门 / 个人）隔离与敏感操作审计。
-- **轻量可靠的工程架构**：
-  - 基于本地高性能 SQLite（`better-sqlite3`），内置 Knex 自动化版本迁移，开箱即用，无需配置繁重的外部数据库。
-  - 生产环境支持 Express 单端口全栈托管前端构建包，无需额外复杂的 Nginx 转发配置。
+### 1. 任务全局看板与多维协同
+提供多维视角管理团队任务，支持经典表格列表、看板拖拽流转、甘特排期与全景负荷驾驶舱无缝切换。
+
+<p align="center">
+  <img src="assets/manager-global-dashboard.png" alt="任务全局看板" width="850" />
+</p>
+
+### 2. 目标穿透与 WBS 任务细化拆解
+支持主子任务递归关联、任务依赖与进度折叠展开，支持按责任人快速派发与跨部门多团队并行推进。
+
+<p align="center">
+  <img src="assets/lead-task-breakdown.png" alt="任务层级拆解与列表总览" width="850" />
+</p>
+
+### 3. 钉钉生态深度集成
+专为钉钉工作台打造，提供原生级交互体验：
+- **无缝免登**：支持钉钉移动端与 PC 端工作台一键免登进入。
+- **扫码登录**：常规桌面浏览器支持直接扫码授权。
+- **智能单聊通知**：基于钉钉机器人推送结构化卡片与沉浸式 ActionCard，重要通知一键穿透落地。
+- **通讯录增量同步**：支持定时自动同步企业部门与员工通讯录。
+
+<p align="center">
+  <img src="assets/feature-dingtalk.png" alt="钉钉生态深度集成" width="850" />
+</p>
+
+### 4. 全场景跨端自适应协同
+针对桌面宽屏与移动设备进行深度视口适配，无论在办公室 PC 还是移动外出，随时随地推进闭环。
+
+<p align="center">
+  <img src="assets/feature-cross-device.png" alt="跨端自适应协同" width="850" />
+</p>
 
 ---
 
