@@ -1,12 +1,12 @@
-# TaskFlow 生产部署与平台集成指南
+# ToDO 任务管理器 生产部署与平台集成指南
 
-本文档介绍 TaskFlow（任务搭子）的生产环境部署流程，并重点针对**钉钉开放平台**的深度集成配置提供详细的实操指南。
+本文档介绍 **ToDO**（ToDO 任务管理器）的生产环境部署流程，并重点针对**钉钉开放平台**的深度集成配置提供详细的实操指南。
 
 ---
 
 ## 一、系统架构与运行拓扑
 
-TaskFlow 采用极简轻量的全栈架构设计，大幅降低私有化自部署门槛：
+ToDO 采用极简轻量的全栈架构设计，大幅降低私有化自部署门槛：
 
 - **单端口全栈托管**：生产环境下由后端 Express 服务直接静态托管前端 React 构建产物（`client/dist`），前后端统一在 `8344` 端口（可自定义），无需复杂的前置 Nginx 即可直接提供服务。
 - **本地嵌入式数据库**：使用高性能 SQLite（`better-sqlite3`），服务启动时自动执行 Knex 增量迁移，免除 MySQL/PostgreSQL 等外部数据库集群维护成本。
@@ -28,8 +28,8 @@ TaskFlow 采用极简轻量的全栈架构设计，大幅降低私有化自部�
 
 ```bash
 # 克隆代码
-git clone https://github.com/your-username/TaskFlow.git
-cd TaskFlow
+git clone https://github.com/Jolly-J/ToDO.git
+cd ToDO
 
 # 安装依赖并构建前端静态资源
 npm install
@@ -41,7 +41,7 @@ npm --prefix client run build
 
 ### 3. 上传到服务器
 
-将必要源码与构建产物上传至服务器部署路径（例如 `/www/wwwroot/taskflow`），注意排除 `node_modules` 与开发数据：
+将必要源码与构建产物上传至服务器部署路径（例如 `/www/wwwroot/todo`），注意排除 `node_modules` 与开发数据：
 
 ```bash
 rsync -avz --exclude='node_modules' \
@@ -49,7 +49,7 @@ rsync -avz --exclude='node_modules' \
            --exclude='server/data' \
            --exclude='logs' \
            --exclude='.git' \
-           ./ root@<服务器IP>:/www/wwwroot/taskflow/
+           ./ root@<服务器IP>:/www/wwwroot/todo/
 ```
 
 ### 4. 服务端目录与依赖初始化
@@ -57,7 +57,7 @@ rsync -avz --exclude='node_modules' \
 SSH 登录服务器：
 
 ```bash
-cd /www/wwwroot/taskflow
+cd /www/wwwroot/todo
 
 # 创建运行所需的数据与日志目录
 mkdir -p logs
@@ -117,12 +117,12 @@ pm2 startup
 
 ## 三、钉钉开放平台深度配置指南
 
-TaskFlow 目前针对**钉钉生态**进行了全链路深度适配，包含客户端内免登、浏览器扫码登录、工作台应用、单聊机器人通知以及组织人员自动同步。
+ToDO 目前针对**钉钉生态**进行了全链路深度适配，包含客户端内免登、浏览器扫码登录、工作台应用、单聊机器人通知以及组织人员自动同步。
 
 ### 1. 创建企业内部应用
 1. 登录 [钉钉开放平台](https://open-dev.dingtalk.com/)。
 2. 进入 **应用开发 -> 企业内部开发 -> 创建应用**。
-3. 填入应用名称（如 `任务搭子`）、应用图标与描述，完成创建。
+3. 填入应用名称（如 `ToDO任务管理器`）、应用图标与描述，完成创建。
 4. 进入应用详情页的 **凭证与基础信息**：
    - 记录 `AppKey`（填入 `DINGTALK_INTERNAL_APP_KEY`）。
    - 记录 `AppSecret`（填入 `DINGTALK_INTERNAL_APP_SECRET`）。
@@ -142,7 +142,7 @@ TaskFlow 目前针对**钉钉生态**进行了全链路深度适配，包含客�
 3. 分别填入后端 `DINGTALK_QR_CLIENT_ID`、`DINGTALK_QR_CLIENT_SECRET` 以及前端 `VITE_DINGTALK_QR_CLIENT_ID`。
 
 ### 4. 配置单聊机器人（任务提醒与通知卡片）
-为了实现任务指派、状态变更、临期督办的单聊卡片推送：
+为了实现任务指派、状态流转、临期督办的单聊卡片推送：
 1. 在当前企业内部应用的 **应用能力** 中，点击 **添加应用能力**，选择 **机器人**。
 2. 开启机器人功能，配置机器人名称与头像。
 3. 记录机器人的 **消息编码 (RobotCode)**，填入后端的 `DINGTALK_ROBOT_CODE`。
@@ -165,9 +165,9 @@ TaskFlow 目前针对**钉钉生态**进行了全链路深度适配，包含客�
 
 ## 四、生态共创与未来规划（企业微信 / 飞书）
 
-目前 TaskFlow **仅深度适配了钉钉生态**，尚未实现对企业微信（WeCom）与飞书（Feishu/Lark）的对接。
+目前 ToDO **仅深度适配了钉钉生态**，尚未实现对企业微信（WeCom）与飞书（Feishu/Lark）的对接。
 
-项目的架构设计中已将认证（Auth）、组织同步（Sync）与消息投递（Notification/Robot）抽离为可扩展的 Adapter 模式。我们非常期待并欢迎社区开发者参与共创：
+项目的架构设计中已将认证（Auth）、组织同步（Sync）与消息投递（Notification/Robot）底层抽象为适配器（Adapter）模式。我们非常期待并欢迎社区开发者参与共创：
 
 - 🤝 **企业微信适配**：企微自建应用免登、扫码登录、企微群/应用消息通知、企微通讯录同步。
 - 🤝 **飞书适配**：飞书网页免登、飞书互动卡片消息（Interactive Cards）、飞书通讯录同步。

@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "license": "MIT",
-  "description": "企业内部跨部门协作任务管理系统",
+  "description": "ToDO 任务管理器 — 现代化的企业级任务协同、团队排期与钉钉深度集成平台",
   "scripts": {
     "dev:client": "npm --prefix client run dev",
     "dev:server": "npm --prefix server run dev",

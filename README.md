@@ -1,4 +1,4 @@
-# TaskFlow（任务搭子）
+# ToDO 任务管理器
 
 > 现代化的企业级任务协同、团队排期与钉钉深度集成平台。
 
@@ -7,7 +7,7 @@
 [![React Version](https://img.shields.io/badge/React-19-blue.svg)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org)
 
-TaskFlow 是一套专为团队日常协同与督办场景打造的高效任务管理系统。系统深度整合钉钉生态，提供直观的看板、排期甘特图、全员负荷驾驶舱与细粒度权限管控，帮助团队建立“件件有着落、事事有回音”的数字协作流程。
+**ToDO**（ToDO 任务管理器）是一套专为团队日常协同与督办场景打造的高效任务管理系统。系统深度整合钉钉生态，提供直观的看板、排期甘特图、全员负荷驾驶舱与细粒度权限管控，帮助团队建立“件件有着落、事事有回音”的现代化数字协同文化。
 
 ---
 
@@ -28,7 +28,7 @@ TaskFlow 是一套专为团队日常协同与督办场景打造的高效任务�
 
 ## 🌐 办公生态适配与社区共创
 
-TaskFlow 采用模块化解耦架构，认证认证（Auth）、组织同步（Sync）与消息推送（Notification/Robot）底层均已抽象为适配器（Adapter）模式。
+ToDO 采用模块化解耦架构，认证（Auth）、组织同步（Sync）与消息推送（Notification/Robot）底层均已抽象为适配器（Adapter）模式。
 
 | 办公生态 | 适配状态 | 核心能力 |
 | :--- | :---: | :--- |
@@ -38,7 +38,7 @@ TaskFlow 采用模块化解耦架构，认证认证（Auth）、组织同步（S
 
 > 💡 **特别说明与共创倡议**：  
 > 本项目目前**优先完成了钉钉生态的完整适配与落地**，尚未支持企业微信和飞书。  
-> 我们非常渴望与社区开发者一起完善多平台协同生态！如果您对企业微信或飞书开发有经验，欢迎提交 [Issue](https://github.com/Jolly-J/TaskFlow/issues) 或发起 [Pull Request](https://github.com/Jolly-J/TaskFlow/pulls)，共同打造更加开放、好用的全平台任务管理器！
+> 我们非常渴望与社区开发者一起完善多平台协同生态！如果您对企业微信或飞书开发有经验，欢迎提交 [Issue](https://github.com/Jolly-J/ToDO/issues) 或发起 [Pull Request](https://github.com/Jolly-J/ToDO/pulls)，共同打造更加开放、好用的全平台任务管理器！
 
 ---
 
@@ -69,8 +69,8 @@ TaskFlow 采用模块化解耦架构，认证认证（Auth）、组织同步（S
 
 ```bash
 # 克隆代码库
-git clone https://github.com/Jolly-J/TaskFlow.git
-cd TaskFlow
+git clone https://github.com/Jolly-J/ToDO.git
+cd ToDO
 
 # 安装依赖
 npm install
