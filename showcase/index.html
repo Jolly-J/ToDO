@@ -18,23 +18,23 @@
       --notion-bg-surface: #F9FAFB;
       --notion-bg-hover: #EFEFEF;
       --notion-bg-active: #E5E7EB;
-      
+
       /* Notion Text Colors */
       --notion-text: #37352F;
       --notion-text-secondary: #787774;
       --notion-text-muted: #9B9A97;
-      
+
       /* Notion Borders & Hairlines */
       --notion-border: rgba(55, 53, 47, 0.09);
       --notion-border-dark: rgba(55, 53, 47, 0.16);
       --notion-border-focus: #2383E2;
-      
+
       /* Notion Shadows */
       --notion-shadow-subtle: 0 1px 3px rgba(0, 0, 0, 0.03), 0 2px 8px rgba(0, 0, 0, 0.04);
       --notion-shadow-card: 0 1px 4px rgba(0, 0, 0, 0.04), 0 6px 16px rgba(0, 0, 0, 0.04);
       --notion-shadow-card-hover: 0 4px 12px rgba(0, 0, 0, 0.06), 0 12px 28px rgba(0, 0, 0, 0.06);
       --notion-shadow-window: 0 16px 48px -6px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.06);
-      
+
       /* Notion Signature Palette */
       --notion-blue-bg: #EBF5FB;
       --notion-blue-text: #2383E2;
@@ -210,12 +210,13 @@
     }
 
     .hero-subtitle {
-      font-size: clamp(1.0rem, 1.2vw, 1.2rem);
-      color: var(--notion-text-secondary);
-      max-width: none;
-      white-space: nowrap;
-      margin: 0 auto;
+      font-size: 1.08rem;
+      color: #64748B;
+      max-width: 680px;
+      margin: 14px auto 20px;
       line-height: 1.7;
+      white-space: normal;
+      text-wrap: balance;
       position: relative;
       z-index: 1;
     }
@@ -1041,13 +1042,13 @@
       background: #FEF2F2;
       border-color: #FECACA;
     }
-    
+
     .p-high {
       color: #D97706;
       background: #FFFBEB;
       border-color: #FDE68A;
     }
-    
+
     .p-medium {
       color: #4B5563;
       background: #F3F4F6;
@@ -1072,14 +1073,14 @@
       color: #2563EB;
       border-color: #BFDBFE;
     }
-    
+
     .st-delayed {
       background: #FEF2F2;
       color: #DC2626;
       border-color: #FECACA;
       font-weight: 700;
     }
-    
+
     .st-done {
       background: #ECFDF5;
       color: #059669;
@@ -2544,7 +2545,7 @@
         gap: 14px;
       }
     }
-  
+
 
 /* =========================================================
    参考字浮 (CharFloat) 官网的高质感视觉系统
@@ -3146,6 +3147,74 @@
   }
 }
 
+
+/* =========================================================
+   Hero CTA 按钮组与排版修复 (精准复刻字浮与苹果胶囊样式)
+   ========================================================= */
+.hero-cta-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin: 0 auto 44px;
+  flex-wrap: wrap;
+  position: relative;
+  z-index: 10;
+}
+.hero-btn-primary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 9px !important;
+  background: #2563EB !important;
+  color: #FFFFFF !important;
+  font-size: 0.96rem !important;
+  font-weight: 700 !important;
+  padding: 12px 28px !important;
+  border-radius: 9999px !important;
+  text-decoration: none !important;
+  box-shadow: 0 10px 25px -4px rgba(37, 99, 235, 0.35) !important;
+  transition: all 0.25s ease !important;
+  cursor: pointer !important;
+  border: none !important;
+}
+.hero-btn-primary:hover {
+  background: #1D4ED8 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 16px 32px -4px rgba(37, 99, 235, 0.45) !important;
+}
+.hero-btn-secondary {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  background: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+  font-size: 0.96rem !important;
+  font-weight: 650 !important;
+  padding: 12px 24px !important;
+  border-radius: 9999px !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.25s ease !important;
+  cursor: pointer !important;
+}
+.hero-btn-secondary:hover {
+  background: #F8FAFC !important;
+  border-color: #94A3B8 !important;
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08) !important;
+}
+.hero-btn-secondary.dashed {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px dashed #94A3B8 !important;
+  color: #475569 !important;
+}
+.hero-btn-secondary.dashed:hover {
+  background: #FFFFFF !important;
+  border-color: #2563EB !important;
+  color: #2563EB !important;
+}
+
   </style>
 </head>
 <body>
@@ -3214,7 +3283,8 @@
       </h1>
 
       <p class="hero-subtitle">
-        一个工具，管好所有任务。公司级、项目级、团队级、小组级全景穿透；从团队空间建构、WBS 目标拆解到个人 4 维高效执行，带您探索有始有终、事事有回音的数字化协同新范式。
+        一个工具，管好所有任务。<br />
+        从团队空间建构、WBS 目标拆解到个人 4 维高效执行，带您探索有始有终、事事有回音的数字化协同新范式。
       </p>
 
       <!-- 核心差异化特性胶囊 (参考字浮 Hero 4 标签) -->
@@ -3237,7 +3307,7 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
           <span>钉钉私有化部署指南</span>
         </a>
-        <a href="#theater" class="hero-btn-secondary" style="border-style: dashed;">
+        <a href="#theater" class="hero-btn-secondary dashed">
           <span>探索交互剧场</span>
         </a>
       </div>
@@ -4382,7 +4452,7 @@
     <!-- =========================================================
          【团队高效协同的 6 个默契约定 (苹果风 Bento Grid Motion 展台)】
          ========================================================= -->
-    
+
 
     <!-- =========================================================
          【团队高效协同的 6 个默契约定】Bento Grid Motion 展台
@@ -4681,7 +4751,7 @@
         </div>
       </div>
     </section>
-  
+
 
     <!-- =========================================================
          【这些事，放心交给它】多角色协同视界 (参考字浮 UseCasesMarquee & AgentGrid)
@@ -5822,7 +5892,7 @@
       updateCalScaling();
       updateTimelineDotPosition(currentStage);
     }, 400);
-  
+
 
     // =========================================================
     // 1. 移动端抽屉切换
