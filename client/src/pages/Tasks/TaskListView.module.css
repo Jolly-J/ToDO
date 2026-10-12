@@ -1,0 +1,24 @@
+.formalSearch,
+.formalSelect {
+  height: var(--tf-density-toolbar-control-height, 32px);
+  min-height: var(--tf-density-toolbar-control-height, 32px);
+  border-radius: 8px;
+}
+
+.formalSearch {
+  width: 100px;
+}
+
+.formalSelect {
+  width: 120px;
+}
+
+.formalDateRange {
+  width: 140px;
+}
+
+.formalDateRange button {
+  height: var(--tf-density-toolbar-control-height, 32px);
+  min-height: var(--tf-density-toolbar-control-height, 32px);
+  border-radius: 8px;
+}

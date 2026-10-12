@@ -1,0 +1,15 @@
+{
+  "version": "1.0.30",
+  "releasedAt": "2026-09-23",
+  "whatsNew": {
+    "enabled": true,
+    "title": "本次更新",
+    "pages": [
+      {
+        "image": "/releases/1.0.30/page-1.webp",
+        "title": "团队空间「驾驶舱」视图上线",
+        "description": "专为团队管理员打造：集成顶部工作台核心 KPI 卡片、任务排期甘特图与全员任务负荷看板，默认智能聚焦当月进行中任务，助您全盘掌握团队进展与风险。"
+      }
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "taskflow-server",
+  "version": "1.0.0",
+  "description": "TaskFlow 后端服务",
+  "main": "src/app.js",
+  "scripts": {
+    "start": "node src/bootstrap/server.js",
+    "dev": "node src/bootstrap/server.js",
+    "db:migrate": "knex migrate:latest",
+    "db:migrate:make": "knex migrate:make",
+    "db:rollback": "knex migrate:rollback",
+    "db:status": "knex migrate:status"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "adm-zip": "^0.6.0",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.8.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.3.1",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "knex": "^3.2.8",
+    "multer": "^2.1.1",
+    "node-cron": "^4.2.1",
+    "sqlite3": "^6.0.1"
+  }
+}

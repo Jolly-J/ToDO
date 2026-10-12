@@ -1,0 +1,127 @@
+.card {
+  cursor: pointer;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #ebe7df;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease, background-color 0.18s ease;
+}
+
+.card:hover {
+  border-color: #d7d1c7;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: calc(var(--tf-density-board-card-padding, 16px) * 0.5);
+}
+
+.priorityRow {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.dragHandleButton {
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e1ddd6;
+  border-radius: 6px;
+  background: #f7f6f3;
+  color: #6b665c;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  transition: background-color 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.dragHandleButton:hover {
+  background: #f1efeb;
+  border-color: #cbc5bb;
+  color: #37352f;
+}
+
+.dragHandleButton:active {
+  cursor: grabbing;
+}
+
+.title {
+  color: #2f3437;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+  margin-bottom: 6px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.description {
+  color: #7f7a70;
+  font-size: 13px;
+  line-height: 1.5;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.footer {
+  margin-top: calc(var(--tf-density-board-card-padding, 16px) * 0.875);
+  padding-top: calc(var(--tf-density-board-card-padding, 16px) * 0.625);
+  border-top: 1px solid #f1efeb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metaItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #8c867d;
+  font-size: 12px;
+  min-height: 20px;
+}
+
+.metaItem svg {
+  font-size: 12px;
+}
+
+.metaItemOverdue {
+  color: #ef4444;
+}
+
+.delayedDoneLabel {
+  color: #ef4444;
+  font-size: 11px;
+  margin-left: 4px;
+}
+
+.assignee {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #57534e;
+  font-size: 12px;
+}
+
+.assigneeName {
+  max-width: 88px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

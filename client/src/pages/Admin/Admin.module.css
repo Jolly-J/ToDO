@@ -1,0 +1,117 @@
+/**
+ * Admin.module.css - Admin 页面的样式文件
+ *
+ * 定义了 Admin 后台管理系统的全局样式变量、布局结构、状态色调、
+ * 卡片样式、表格样式等视觉规范，遵循极简设计原则和统一的色彩系统。
+ *
+ * @module pages/Admin
+ */
+
+.page {
+  min-height: 100vh;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: var(--tf-background);
+  color: var(--tf-foreground);
+}
+
+.page :global([data-icon]) {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  stroke-width: 1.5;
+}
+
+.mainContent {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .page {
+    height: auto;
+    min-height: 100dvh;
+  }
+
+  .mainContent {
+    min-height: 70dvh;
+  }
+}
+
+.reveal {
+  animation: admin-enter 360ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.revealDelayed {
+  animation: admin-enter 420ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.statusDot {
+  display: inline-flex;
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+  flex: none;
+}
+
+.statusSuccess {
+  background: #22c55e;
+}
+
+.statusWarning {
+  background: #fb923c;
+}
+
+.statusError {
+  background: #ef4444;
+}
+
+.statusNeutral {
+  background: #a1a1aa;
+}
+
+.mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.progressFill {
+  height: 100%;
+  border-radius: inherit;
+  background: #09090b;
+  animation: progress-enter 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: left center;
+}
+
+@keyframes admin-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes progress-enter {
+  from {
+    transform: scaleX(0.2);
+    opacity: 0;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal,
+  .revealDelayed,
+  .progressFill {
+    animation: none;
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "taskflow",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "description": "企业内部跨部门协作任务管理系统",
+  "scripts": {
+    "dev:client": "npm --prefix client run dev",
+    "dev:server": "npm --prefix server run dev",
+    "dev": "node scripts/dev.js",
+    "build": "npm --prefix client run build",
+    "up": "npm run build && pm2 startOrReload ecosystem.config.cjs --only taskflow",
+    "down": "pm2 delete taskflow",
+    "restart": "pm2 restart taskflow",
+    "logs": "pm2 logs taskflow",
+    "status": "pm2 status taskflow",
+    "test:api": "node scripts/api-regression.js",
+    "db:backup": "node scripts/db-maintenance.js"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "^5.90.21",
+    "antd": "^6.3.2",
+    "axios": "^1.13.6",
+    "better-sqlite3": "^12.8.0",
+    "dayjs": "^1.11.20",
+    "react-router-dom": "^7.13.1"
+  }
+}

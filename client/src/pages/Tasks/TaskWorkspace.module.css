@@ -1,0 +1,32 @@
+/**
+ * 配置名称：任务工作区样式
+ * 文件作用：控制团队任务工作区在共享工作台骨架中的纵向排布和视图切换动效。
+ * 主要功能：为团队空间复用主切换卡片和内容区域，保持与个人任务页面一致的结构节奏。
+ */
+.workspaceShell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-density-workspace-gap, 16px);
+}
+
+.viewStage {
+  position: relative;
+  min-width: 0;
+}
+
+.viewPanel {
+  animation: workspaceFadeSlide 220ms ease;
+  min-width: 0;
+}
+
+@keyframes workspaceFadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

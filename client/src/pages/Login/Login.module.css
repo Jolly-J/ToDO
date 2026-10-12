@@ -1,0 +1,164 @@
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+  background: #fff;
+}
+
+.card {
+  width: min(480px, 100%);
+  border: 1px solid #e5e7eb !important;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.header {
+  padding: 40px 32px 24px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logoWrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.logo {
+  height: 64px;
+  width: auto;
+}
+
+.brandTitle {
+  margin: 0 !important;
+  color: #111827 !important;
+  font-weight: 700 !important;
+  font-size: 30px !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.alert {
+  margin-bottom: 16px;
+  border-radius: 6px !important;
+}
+
+.content {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 32px;
+}
+
+.loadingWrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loadingIcon {
+  font-size: 40px;
+  color: #111827;
+}
+
+.loadingText {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.qrContent {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  display: flex;
+  align-items: center;
+}
+
+.qrArea {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin-bottom: 24px;
+}
+
+.qrSkeleton {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  z-index: 1;
+}
+
+.qrSkeletonImage :global(.ant-skeleton-image) {
+  width: 240px !important;
+  height: 240px !important;
+  border-radius: 8px !important;
+}
+
+.qrSkeletonText {
+  width: 128px !important;
+}
+
+.qrSkeletonText :global(.ant-skeleton-input) {
+  width: 128px !important;
+}
+
+.qrContainer {
+  width: 100%;
+  height: 100%;
+  transition: opacity 0.5s ease-out, filter 0.5s ease-out, transform 0.5s ease-out;
+}
+
+.qrHidden {
+  opacity: 0;
+  filter: blur(6px);
+  transform: scale(0.96);
+}
+
+.qrVisible {
+  opacity: 1;
+  filter: blur(0);
+  transform: scale(1);
+}
+
+.statusWrap {
+  margin-bottom: 8px;
+}
+
+.statusText {
+  color: #111827;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.footer {
+  padding: 16px 32px;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.footerText {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+@media (max-width: 560px) {
+  .content {
+    padding: 24px 16px;
+  }
+
+  .header {
+    padding: 28px 16px 18px;
+  }
+
+  .brandTitle {
+    font-size: 26px !important;
+  }
+}

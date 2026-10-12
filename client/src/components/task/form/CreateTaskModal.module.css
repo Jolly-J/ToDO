@@ -1,0 +1,109 @@
+.modalRoot :global(.ant-modal-body) {
+  padding-top: 16px;
+  padding-bottom: 24px;
+  max-height: min(680px, calc(100vh - 220px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modalRoot :global(.ant-modal-content) {
+  overflow: hidden;
+}
+
+.modalShell {
+  min-height: auto;
+  max-height: none;
+}
+
+.formGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.formGrid :global(.ant-form-item) {
+  margin-bottom: 0;
+}
+
+.formGrid :global(.ant-form-item-label) {
+  padding-bottom: 4px;
+}
+
+.formGrid :global(.ant-input),
+.formGrid :global(.ant-select-selector),
+.formGrid :global(.ant-picker),
+.formGrid :global(textarea.ant-input) {
+  border-radius: 8px;
+}
+
+.fullRow {
+  width: 100%;
+}
+
+.fullRow :global(.ant-form-item) {
+  width: 100%;
+}
+
+.titleRow :global(.ant-input) {
+  min-height: 40px;
+}
+
+.descriptionRow :global(textarea.ant-input) {
+  min-height: 92px;
+  max-height: 92px;
+  resize: none;
+}
+
+.twoColumnRow {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+}
+
+.dateGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.participantsItem :global(.ant-select-multiple .ant-select-selector) {
+  min-height: 40px !important;
+  max-height: 40px;
+  overflow: hidden;
+}
+
+.participantsItem :global(.ant-select-selection-overflow) {
+  flex-wrap: nowrap;
+  overflow: hidden;
+}
+
+.formBody {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-top: 2px;
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .modalRoot :global(.ant-modal-body) {
+    max-height: calc(100vh - 180px);
+    padding-bottom: 20px;
+  }
+
+  .modalShell {
+    min-height: auto;
+    max-height: none;
+  }
+
+  .twoColumnRow,
+  .dateGrid {
+    grid-template-columns: 1fr;
+  }
+}

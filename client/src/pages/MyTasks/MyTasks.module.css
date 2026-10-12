@@ -1,0 +1,53 @@
+/**
+ * 配置名称：我的任务页面样式
+ * 文件作用：定义个人任务工作台的页头、筛选条和列表容器视觉。
+ * 主要功能：在复用共享工作台骨架的基础上，补充页面专属的搜索、提示和表格样式。
+ */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.search {
+  width: 240px;
+}
+
+.scopeSection {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-density-workbench-card-gap, 12px);
+}
+
+.scopeCards {
+  grid-template-columns: repeat(4, minmax(var(--tf-density-workbench-card-min, 220px), 1fr));
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 4px;
+  scrollbar-gutter: stable;
+}
+
+.filterBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--tf-density-toolbar-gap, 16px);
+  flex-wrap: wrap;
+  margin-top: -2px;
+}
+
+.filterHint {
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.formalDateRange {
+  width: 140px;
+}
+
+.formalDateRange button {
+  height: 32px;
+  min-height: 32px;
+  border-radius: 8px;
+}

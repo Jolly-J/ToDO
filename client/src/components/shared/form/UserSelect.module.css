@@ -1,0 +1,149 @@
+.userSelect {
+  min-width: 0;
+  --user-select-operation-space: 0px;
+}
+
+.userSelectSingle {
+  --user-select-operation-space: 56px;
+}
+
+.userSelect :global(.ant-select-selector),
+.userSelect :global(.ant-select-selection-wrap),
+.userSelect :global(.ant-select-selection-search),
+.userSelect :global(.ant-select-selection-item),
+.userSelect :global(.ant-select-selection-item-content),
+.userSelect :global(.ant-select-selection-overflow),
+.userSelect :global(.ant-select-selection-overflow-item) {
+  min-width: 0;
+}
+
+.userSelect :global(.ant-select-selection-item) {
+  font-size: 14px;
+}
+
+.userSelectSingle :global(.ant-select-selector) {
+  align-items: center;
+}
+
+.userSelectSingle :global(.ant-select-content) {
+  min-width: 24px;
+  padding-inline-end: var(--user-select-operation-space);
+}
+
+.userSelectSingle :global(.ant-select-clear) {
+  inset-inline-end: 36px;
+}
+
+.userSelectSingle :global(.ant-select-suffix) {
+  inset-inline-end: 12px;
+}
+
+.userSelectPrefix {
+  display: flex;
+  align-items: center;
+  flex: 1 1 auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.userSelectInlineValue {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-width: 0;
+}
+
+.userSelectAvatar {
+  flex-shrink: 0;
+  background: #e8eef6;
+  color: #516072;
+}
+
+.userSelectName,
+.userSelectSeparator,
+.userSelectDepartment,
+.userSelectDropdownName,
+.userSelectDropdownDepartment,
+.userSelectFallbackLabel {
+  display: block;
+  min-width: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.userSelectName,
+.userSelectDropdownName,
+.userSelectFallbackLabel {
+  color: #1f2937;
+}
+
+.userSelectSeparator,
+.userSelectDepartment,
+.userSelectDropdownDepartment {
+  color: #98a2b3;
+}
+
+.userSelectName,
+.userSelectDropdownName,
+.userSelectFallbackLabel {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userSelectFallbackLabel {
+  max-width: 100%;
+}
+
+.userSelectName {
+  flex: 0 0 auto;
+}
+
+.userSelectSeparator {
+  flex-shrink: 0;
+}
+
+.userSelectDepartment,
+.userSelectDropdownDepartment {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userSelectDepartment {
+  flex: 0 0 auto;
+}
+
+.userSelectDropdownOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.userSelectPopup {
+  min-width: 220px;
+}
+
+.userSelectPopup :global(.ant-select-item-option-content) {
+  overflow: hidden;
+}
+
+.userSelectSingle:global(.ant-select-open) :global(input.ant-select-input[value='']) {
+  width: 12px !important;
+}
+
+.userSelectSrOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}

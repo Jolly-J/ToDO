@@ -1,0 +1,12 @@
+/**
+ * 配置名称：任务标题预览样式
+ * 文件作用：统一任务标题在表格场景中的单行截断表现。
+ * 主要功能：提供省略号展示、最大宽度约束和标题文本的基础排版样式。
+ */
+.text {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

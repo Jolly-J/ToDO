@@ -1,0 +1,58 @@
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-detail-readonly-stack-gap);
+}
+
+.group {
+  border: 1px solid var(--tf-detail-readonly-section-border);
+  border-radius: var(--tf-detail-readonly-section-radius);
+  background: var(--tf-detail-readonly-section-bg);
+  padding: var(--tf-detail-readonly-section-padding);
+}
+
+.sectionContent {
+  display: grid;
+  gap: 12px 16px;
+}
+
+.columns1 {
+  grid-template-columns: 1fr;
+}
+
+.columns2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.columns3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-detail-readonly-field-gap);
+  min-width: 0;
+}
+
+.fieldLabel {
+  color: #8f8b83;
+  font-size: var(--tf-detail-readonly-label-size);
+  line-height: var(--tf-detail-readonly-label-line-height);
+}
+
+.fieldValue {
+  margin: 0;
+  color: #2f2d29;
+  font-size: var(--tf-detail-readonly-value-size);
+  line-height: var(--tf-detail-readonly-value-line-height);
+  font-weight: 500;
+  min-height: 24px;
+}
+
+@media (max-width: 900px) {
+  .columns2,
+  .columns3 {
+    grid-template-columns: 1fr;
+  }
+}

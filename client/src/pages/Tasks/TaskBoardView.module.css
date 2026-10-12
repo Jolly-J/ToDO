@@ -1,0 +1,120 @@
+.columns {
+  display: flex;
+  gap: var(--tf-density-board-gap, 16px);
+  overflow: auto;
+  min-height: 400px;
+  padding-bottom: 4px;
+}
+
+.boardDateRange {
+  width: min(188px, 30vw);
+}
+
+.boardDateRange button {
+  height: var(--tf-density-toolbar-control-height, 32px);
+  min-height: var(--tf-density-toolbar-control-height, 32px);
+  border-radius: 8px;
+}
+
+.column {
+  flex: 1;
+  min-width: var(--tf-density-board-column-min, 300px);
+  background: #f8f8f7;
+  border: 1px solid #ebe9e4;
+  border-radius: var(--tf-density-board-column-radius, 12px);
+  padding: var(--tf-density-board-column-padding, 14px);
+}
+
+.columnHeader {
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #ece9e4;
+}
+
+.columnTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  color: #37352f;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  flex: 0 0 auto;
+}
+
+.countBadge {
+  background: #efede8;
+  border: 1px solid #e1ddd6;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #6b665c;
+}
+
+.columnBody {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tf-density-board-gap, 12px);
+  min-height: 120px;
+}
+
+.emptyDropZone {
+  min-height: 120px;
+  border: 1px dashed #d7d2ca;
+  border-radius: 10px;
+  padding: 28px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #8f8a81;
+  font-size: 13px;
+  line-height: 1.5;
+  background: #fcfcfb;
+}
+
+.draggableCard {
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+
+.canceledSeparator {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 2px 0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.canceledSeparator::before,
+.canceledSeparator::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: #d5d9df;
+}
+
+.canceledSeparator span {
+  flex: 0 0 auto;
+  padding: 0 6px;
+}
+
+.draggingCard {
+  opacity: 0.56;
+}
+
+.overlayCard {
+  opacity: 0.98;
+  box-shadow: 0 10px 22px rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+}

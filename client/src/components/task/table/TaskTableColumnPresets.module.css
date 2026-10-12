@@ -1,0 +1,130 @@
+/**
+ * 配置名称：任务列表列预设样式
+ * 文件作用：沉淀任务列表在不同页面下复用的主信息列、成员列与元信息列样式。
+ * 主要功能：统一标题、描述、负责人、参与人、文本列与操作列的视觉和截断规则。
+ */
+.titleCell {
+  display: block;
+  color: #111827;
+  font-weight: 600;
+}
+
+.titleCellOverdue {
+  color: #ef4444;
+}
+
+.titleCellStack {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.description {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.55;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.assigneeCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.assigneeAvatar {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ffffff;
+}
+
+.assigneeName {
+  color: #44403c;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.participantCell {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.participantAvatars {
+  display: inline-flex;
+  align-items: center;
+}
+
+.participantAvatar {
+  width: 22px;
+  height: 22px;
+  margin-left: -6px;
+  border: 2px solid #ffffff;
+}
+
+.participantAvatarFirst {
+  margin-left: 0;
+}
+
+.participantNames {
+  color: #57534e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.unassignedText {
+  display: block;
+  color: #a8a29e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.textCell,
+.textCellCompact,
+.textCellSubtle {
+  display: block;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.textCell {
+  color: #374151;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.textCellCompact {
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 20px;
+}
+
+.textCellSubtle {
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.actionCell {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.actionLink {
+  justify-content: flex-start;
+  width: 100%;
+  padding-inline: 0;
+}

@@ -1,0 +1,509 @@
+/**
+ * Team Settings Page Styles
+ * Compact single-card layout with three sections divided by border-top
+ * Key-value display for basic info, member list, danger zone
+ */
+
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 主布局提供 980px 桌面画布后，以容器宽度决定设置页内部排布。 */
+.contentContainer {
+  container-type: inline-size;
+}
+
+.settingRow,
+.settingRowStart {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.settingRow {
+  align-items: center;
+}
+
+.settingRowStart {
+  align-items: flex-start;
+}
+
+.reminderHeader {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reminderTimeTrigger {
+  width: 10rem;
+  justify-content: flex-start;
+}
+
+.reminderRuleControls {
+  display: flex;
+  flex-flow: row wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.reminderWorkspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.95fr);
+  gap: 16px;
+}
+
+.taskPoolItem {
+  display: flex;
+  width: 100%;
+  max-width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  padding: 8px 12px;
+  font-size: 0.875rem;
+}
+
+@container (max-width: 900px) {
+  .settingRow,
+  .settingRowStart {
+    grid-template-columns: 1fr;
+  }
+
+  .reminderHeader,
+  .reminderRuleControls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reminderTimeTrigger {
+    width: 100%;
+  }
+
+  .reminderWorkspace {
+    grid-template-columns: 1fr;
+  }
+
+  .taskPoolItem {
+    align-items: flex-start;
+  }
+}
+
+/* ── Top Navigation Bar ── */
+.topBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.breadcrumb {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.pageTitle {
+  margin: 8px 0 0;
+  color: #111827;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+/* ── Settings Card ── */
+.settingsCard {
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.section {
+  padding: 20px 24px;
+}
+
+.sectionHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sectionTitle {
+  color: #111827;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.sectionActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.divider {
+  height: 1px;
+  background: #e5e7eb;
+}
+
+/* ── Key-Value Grid (Read-only) ── */
+.kvGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.kvItem {
+  display: grid;
+  grid-template-columns: 100px 1fr;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.kvFull {
+  grid-template-columns: 100px 1fr;
+}
+
+.kvLabel {
+  color: #6b7280;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.kvValue {
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* ── Edit Form ── */
+.profileForm {
+  margin-top: 4px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px 12px;
+}
+
+.formItem {
+  margin-bottom: 0;
+}
+
+.formItemFull {
+  grid-column: 1 / -1;
+}
+
+.profileForm :global(.ant-form-item-label > label) {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.profileForm :global(.ant-input),
+.profileForm :global(.ant-select-selector),
+.profileForm :global(textarea.ant-input) {
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  font-size: 13px;
+}
+
+.profileForm :global(textarea.ant-input) {
+  min-height: 80px;
+  max-height: 120px;
+  resize: vertical;
+}
+
+/* ── Member List ── */
+.memberList {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.memberRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #ffffff;
+}
+
+.memberIdentity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.memberInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.memberName {
+  margin: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberDept {
+  margin: 0;
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  flex-shrink: 0;
+}
+
+.roleSelect {
+  min-width: 80px;
+}
+
+/* ── Danger Section ── */
+.dangerSection {
+  background: linear-gradient(135deg, #fff7f7 0%, #fffbfb 100%);
+  border-top: 1px solid #fecaca;
+}
+
+.dangerContent {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.dangerTitle {
+  margin: 0 0 8px;
+  color: #991b1b;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.dangerText {
+  margin: 0 0 8px;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.dangerHint {
+  margin: 0;
+  color: #991b1b;
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+/* ── Modal & Drawer Text ── */
+.modalText {
+  margin: 0;
+  color: #111827;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.modalMeta {
+  margin: 10px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* ── Drawer Styles ── */
+.drawerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.drawerBody {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.memberHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.memberHeaderName {
+  margin: 0;
+  color: #111827;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.memberHeaderDept {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.summaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.summaryCard {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.summaryLabel {
+  display: block;
+  color: #6b7280;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.summaryValue {
+  display: block;
+  margin-top: 6px;
+  color: #111827;
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.drawerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.drawerSectionTitle {
+  margin: 0;
+  color: #111827;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.taskItem {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.taskTitle {
+  color: #111827;
+  font-size: 13px;
+  line-height: 1.5;
+  flex: 1;
+  min-width: 0;
+  word-break: break-word;
+}
+
+.taskStatus {
+  color: #9ca3af;
+  font-size: 12px;
+  line-height: 1.5;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.exitMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 12px;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .topBar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sectionHeader {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .sectionActions {
+    justify-content: flex-start;
+  }
+
+  .formGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .kvItem {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .memberActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .dangerContent {
+    flex-direction: column;
+  }
+
+  .summaryGrid {
+    grid-template-columns: 1fr;
+  }
+}

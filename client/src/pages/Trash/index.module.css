@@ -1,0 +1,28 @@
+/**
+ * 配置名称：回收站页面样式
+ * 文件作用：补充页面专属恢复动作样式。
+ * 主要功能：统一回收站列表恢复任务按钮的对齐方式。
+ */
+
+.restoreButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 6px;
+  color: #18181b;
+  border-color: #e4e4e7;
+  background-color: #ffffff;
+  cursor: pointer;
+  transition: all 0.15s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04);
+}
+
+.restoreButton:hover {
+  background-color: #f4f4f5;
+  border-color: #d4d4d8;
+  color: #09090b;
+}
