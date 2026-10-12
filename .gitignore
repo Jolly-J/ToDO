@@ -59,3 +59,6 @@ style.md
 server/src/migrations/image/
 *.zip
 *.tar.gz
+
+# 产品展示落地页 (本地独立运行，不提交到开源仓库)
+showcase/
