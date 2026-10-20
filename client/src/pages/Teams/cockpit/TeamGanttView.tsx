@@ -2,14 +2,14 @@
  * 组件名称：团队空间甘特图视图
  * 文件作用：将团队任务转换为甘特图时间轴并呈现。
  * 主要功能：
- *   1. 顶部提供时间范围筛选（默认本月）和任务状态筛选（默认进行中）；
+ *   1. 顶部提供任务状态筛选（默认进行中）；
  *   2. 支持日/周/月/年粒度切换、任务树折叠/展开、快速回到今天、仅看逾期与风险任务；
  *   3. 年视图下整年 12 个月列宽自适应容器，无需左右水平滚动；
- *   4. 点击任务弹出详情抽屉。
+ *   4. 支持手动缩放、完整排期全览和右下角拖动高度；点击任务打开详情。
  */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import dayjs from 'dayjs';
-import { GanttChartSquare } from 'lucide-react';
+import { GanttChartSquare, Grip, Scan, RotateCcw } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -19,15 +19,14 @@ import {
   GanttTreePane,
   GanttTimelinePane,
   buildGanttRows,
-  buildTimelineUnits,
   getDateOffsetPx,
   getItemGridPlacement,
-  getTimelineWidthPx,
   type GanttItem,
   type GanttScale,
   type GanttGridPlacement,
 } from '@/components/gantt';
 import type { Task } from '@/types';
+import { buildTeamGanttLayout, getTimeProgress } from './teamGanttLayout';
 
 interface TeamGanttViewProps {
   tasks: Task[];
@@ -36,15 +35,14 @@ interface TeamGanttViewProps {
 
 const ROW_HEIGHT = 40;
 const LEFT_PANE_WIDTH = 280;
-const PX_PER_DAY_BY_SCALE: Record<Exclude<GanttScale, 'year'>, number> = {
-  day: 44,
-  week: 18,
-  month: 6,
-};
 
 export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps) {
   const [scale, setScale] = useState<GanttScale>('week');
   const [riskOnly, setRiskOnly] = useState(false);
+  const [zoom, setZoom] = useState(100);
+  const [fit, setFit] = useState(false);
+  const [height, setHeight] = useState<number | null>(null);
+  const resizeRef = useRef<{ pointerId: number; y: number; height: number } | null>(null);
   // 默认筛选：任务状态为“进行中”
   const [statusFilter, setStatusFilter] = useState<string>('in_progress');
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
@@ -54,23 +52,6 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
   const [containerWidth, setContainerWidth] = useState<number>(0);
 
   const todayStr = dayjs().format('YYYY-MM-DD');
-
-  // 监听容器宽度，用于年视图自适应撑满容器，无需水平滚动
-  useEffect(() => {
-    const el = timelineRef.current || containerRef.current;
-    if (!el) return;
-    setContainerWidth(el.clientWidth);
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.contentRect.width > 0) {
-          setContainerWidth(entry.contentRect.width);
-        }
-      }
-    });
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
 
   // 1. 将任务及其潜在嵌套的 subtasks 进行扁平化
   const flattenedTasks = useMemo(() => {
@@ -195,10 +176,7 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
         dueDate = dayjs(startDate).add(3, 'day').format('YYYY-MM-DD');
       }
 
-      let progress = isDone ? 100 : task.status === 'in_progress' ? 50 : 0;
-      if (!isDone && task.subtask_count && task.subtask_count > 0) {
-        progress = Math.round(((task.subtask_done_count || 0) / task.subtask_count) * 100);
-      }
+      const progress = getTimeProgress(startDate, dueDate, todayStr);
 
       const hasValidParent = Boolean(task.parent_id && taskMap.has(task.parent_id));
 
@@ -221,63 +199,6 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
     });
   }, [filteredTasks, depthMap, todayStr]);
 
-  // 5. 计算时间轴范围与 pxPerDay (年视图整年撑满容器，无滚动条)
-  const { rangeStart, rangeEnd, pxPerDay, timelineWidth } = useMemo(() => {
-    const availableWidth = Math.max((containerWidth || 1000) - LEFT_PANE_WIDTH, 480);
-
-    if (scale === 'year') {
-      const currentYear = dayjs().year();
-      const start = `${currentYear}-01-01`;
-      const end = `${currentYear}-12-31`;
-      const totalYearDays = dayjs(end).diff(dayjs(start), 'day') + 1;
-      const dynamicPxPerDay = availableWidth / totalYearDays;
-      return {
-        rangeStart: start,
-        rangeEnd: end,
-        pxPerDay: dynamicPxPerDay,
-        timelineWidth: availableWidth,
-      };
-    }
-
-    let minDate = todayStr;
-    let maxDate = todayStr;
-
-    ganttItems.forEach((item) => {
-      if (item.startDate && item.startDate < minDate) minDate = item.startDate;
-      if (item.dueDate && item.dueDate > maxDate) maxDate = item.dueDate;
-    });
-
-    const fixedPxPerDay = PX_PER_DAY_BY_SCALE[scale];
-    const minDaysToFill = Math.ceil(availableWidth / fixedPxPerDay);
-
-    let start = dayjs(minDate).subtract(scale === 'month' ? 15 : 4, 'day');
-    let end = dayjs(maxDate).add(scale === 'month' ? 15 : 7, 'day');
-
-    // 默认视野至少保证两周
-    if (end.diff(start, 'day') < 14) {
-      start = start.subtract(7, 'day');
-      end = end.add(14, 'day');
-    }
-
-    // 若当前任务时间跨度不足以铺满右侧可用宽度，自动向后延伸 end，确保图表网格列完整填满至最右侧边缘，杜绝右侧留白
-    const currentSpanDays = end.diff(start, 'day') + 1;
-    if (currentSpanDays < minDaysToFill) {
-      end = start.add(minDaysToFill + (scale === 'month' ? 30 : 7), 'day');
-    }
-
-    const finalStart = start.format('YYYY-MM-DD');
-    const finalEnd = end.format('YYYY-MM-DD');
-    const units = buildTimelineUnits(finalStart, finalEnd, scale);
-    const computedWidth = Math.max(getTimelineWidthPx(units, fixedPxPerDay), availableWidth);
-
-    return {
-      rangeStart: finalStart,
-      rangeEnd: finalEnd,
-      pxPerDay: fixedPxPerDay,
-      timelineWidth: computedWidth,
-    };
-  }, [containerWidth, ganttItems, scale, todayStr]);
-
   const allRows = useMemo(() => buildGanttRows(ganttItems), [ganttItems]);
   const visibleRows = useMemo(
     () => buildGanttRows(ganttItems, collapsedIds),
@@ -288,33 +209,39 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
     return visibleRows.filter((r) => r.isDelayed || r.isCritical);
   }, [riskOnly, visibleRows]);
 
-  const units = useMemo(
-    () => buildTimelineUnits(rangeStart, rangeEnd, scale),
-    [rangeStart, rangeEnd, scale]
+  // 折叠只隐藏行，不改变全览范围；风险筛选则只覆盖命中的排期。
+  const rangeItems = useMemo(
+    () => riskOnly ? ganttItems.filter((item) => item.isDelayed || item.isCritical) : ganttItems,
+    [ganttItems, riskOnly]
   );
+  const { units, renderScale, pxPerDay, timelineWidth, taskStart, taskEnd } = useMemo(
+    () => buildTeamGanttLayout({
+      items: rangeItems, scale, availableWidth: (containerWidth || 1000) - LEFT_PANE_WIDTH,
+      today: todayStr, zoom, fit,
+    }),
+    [rangeItems, scale, containerWidth, todayStr, zoom, fit]
+  );
+
+  // 滚动区可能在加载或筛选后才挂载；同时监听滚动条引起的可用宽度变化。
+  const hasRows = filteredRows.length > 0;
+  useEffect(() => {
+    const el = timelineRef.current || containerRef.current;
+    if (!el) return;
+    const measure = () => setContainerWidth(el.clientWidth);
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [hasRows]);
 
   const placements = useMemo(() => {
     const map = new Map<string, GanttGridPlacement>();
-    const totalDays = units.reduce((sum, u) => sum + u.daySpan, 0);
-
     allRows.forEach((row) => {
       const placement = getItemGridPlacement(row, units, pxPerDay);
-      if (placement.startIndex !== -1) {
-        if (scale === 'year' && totalDays > 0) {
-          const leftPx = (placement.startOffsetDays / totalDays) * timelineWidth;
-          const widthPx = Math.max((placement.durationDays / totalDays) * timelineWidth, 16);
-          map.set(row.id, {
-            ...placement,
-            leftPx,
-            widthPx,
-          });
-        } else {
-          map.set(row.id, placement);
-        }
-      }
+      if (placement.startIndex !== -1) map.set(row.id, placement);
     });
     return map;
-  }, [allRows, pxPerDay, scale, timelineWidth, units]);
+  }, [allRows, pxPerDay, units]);
 
   const handleToggleCollapse = (id: string) => {
     setCollapsedIds((prev) => {
@@ -333,8 +260,8 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
   // 全部展开：清空折叠 ID 集合
   const handleExpandAll = () => setCollapsedIds(new Set());
 
-  const handleScrollToToday = () => {
-    if (scale === 'year') {
+  const handleScrollToToday = useCallback(() => {
+    if (fit || (scale === 'year' && zoom <= 100)) {
       // 年视图整年已完整呈现在容器内，无需水平滚动
       return;
     }
@@ -344,16 +271,20 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
     if (offsetPx === null) return;
     const target = LEFT_PANE_WIDTH + offsetPx - el.clientWidth / 2;
     el.scrollTo({ left: Math.max(0, target), behavior: 'smooth' });
-  };
+  }, [fit, scale, zoom, todayStr, units, pxPerDay]);
 
   // 挂载或日/周/月粒度就绪后，自动平滑聚焦到今天
   useEffect(() => {
-    if (scale === 'year') return;
+    if (fit) {
+      timelineRef.current?.scrollTo({ left: 0 });
+      return;
+    }
+    if (scale === 'year' && zoom <= 100) return;
     const timer = setTimeout(() => {
       handleScrollToToday();
     }, 150);
     return () => clearTimeout(timer);
-  }, [units, scale]);
+  }, [units, scale, fit, zoom, handleScrollToToday]);
 
   const handleClickItem = (item: GanttItem) => {
     if (item.taskId && onTaskClick) {
@@ -376,7 +307,11 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
     <Card ref={containerRef} className="overflow-hidden border border-[#EFEFEF] shadow-none bg-white">
       <GanttToolbar
         scale={scale}
-        onScaleChange={setScale}
+        onScaleChange={(next) => {
+          setScale(next);
+          setFit(false);
+          setZoom(100);
+        }}
         riskOnly={riskOnly}
         onRiskOnlyChange={setRiskOnly}
         onScrollToToday={handleScrollToToday}
@@ -386,6 +321,29 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
         onStatusFilterChange={setStatusFilter}
         taskCount={filteredRows.length}
       />
+
+      <div className="flex flex-wrap items-center gap-3 border-b border-border px-3 py-2">
+        <label className="flex items-center gap-2 text-xs text-muted-foreground">
+          时间轴间距
+          <input
+            type="range" aria-label="时间轴间距" min={10} max={200} step={5}
+            className="w-28 accent-primary" value={zoom} disabled={!hasRows}
+            onChange={(event) => { setZoom(Number(event.target.value)); setFit(false); }}
+          />
+          <span className="w-10 tabular-nums">{fit ? '自适应' : `${zoom}%`}</span>
+        </label>
+        <Button size="xs" variant={fit ? 'secondary' : 'outline'} aria-pressed={fit}
+          disabled={!hasRows} onClick={() => setFit(true)}>
+          <Scan data-icon="inline-start" /> 全览
+        </Button>
+        <Button size="xs" variant="ghost" disabled={!hasRows}
+          onClick={() => { setFit(false); setZoom(100); }}>
+          <RotateCcw data-icon="inline-start" /> 恢复默认间距
+        </Button>
+        {fit && taskStart && taskEnd && (
+          <span className="ml-auto text-xs text-muted-foreground">排期范围：{taskStart} 至 {taskEnd}</span>
+        )}
+      </div>
 
       {tasks.length === 0 ? (
         <div className="flex flex-col items-center justify-center p-12 text-center">
@@ -414,13 +372,15 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
         <div
           ref={timelineRef}
           className={cn(
-            'max-h-[550px]',
-            scale === 'year' ? 'overflow-y-auto overflow-x-hidden' : 'overflow-auto'
+            'min-w-0',
+            fit ? 'overflow-y-auto overflow-x-hidden' : 'overflow-auto'
           )}
+          aria-label="任务排期时间轴"
+          style={{ maxHeight: height === null ? 550 : undefined, height: height ?? undefined }}
         >
           <div
-            className="w-full flex flex-col"
-            style={{ minWidth: scale === 'year' ? '100%' : LEFT_PANE_WIDTH + timelineWidth }}
+            className="flex flex-col"
+            style={{ width: LEFT_PANE_WIDTH + timelineWidth }}
           >
             <div className="sticky top-0 z-30 flex w-full">
               <div
@@ -429,7 +389,7 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
               >
                 任务名称
               </div>
-              <GanttTimelineHeader units={units} pxPerDay={pxPerDay} scale={scale} />
+              <GanttTimelineHeader units={units} pxPerDay={pxPerDay} scale={renderScale} compactLabels={fit} />
             </div>
             <div className="flex w-full">
               <div
@@ -451,11 +411,47 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
                 placements={placements}
                 pxPerDay={pxPerDay}
                 rowHeight={ROW_HEIGHT}
-                scale={scale}
+                scale={renderScale}
                 onClickTask={handleClickItem}
               />
             </div>
           </div>
+        </div>
+      )}
+      {hasRows && (
+        <div className="flex justify-end border-t border-border px-1">
+          <button
+            type="button" aria-label="调整甘特图高度"
+            title="拖动调整高度；方向键调整，Home 恢复默认高度"
+            className="flex size-6 touch-none cursor-ns-resize items-center justify-center text-muted-foreground hover:text-foreground focus-visible:outline focus-visible:outline-primary"
+            onPointerDown={(event) => {
+              if (event.button !== 0) return;
+              event.preventDefault();
+              resizeRef.current = {
+                pointerId: event.pointerId, y: event.clientY,
+                height: timelineRef.current?.getBoundingClientRect().height || 550,
+              };
+              event.currentTarget.setPointerCapture(event.pointerId);
+            }}
+            onPointerMove={(event) => {
+              const drag = resizeRef.current;
+              if (drag?.pointerId === event.pointerId) setHeight(Math.max(200, drag.height + event.clientY - drag.y));
+            }}
+            onPointerUp={(event) => {
+              resizeRef.current = null;
+              if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+            }}
+            onPointerCancel={() => { resizeRef.current = null; }}
+            onLostPointerCapture={() => { resizeRef.current = null; }}
+            onKeyDown={(event) => {
+              if (event.key === 'Home') { event.preventDefault(); setHeight(null); }
+              if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                event.preventDefault();
+                const current = height ?? timelineRef.current?.getBoundingClientRect().height ?? 550;
+                setHeight(Math.max(200, current + (event.key === 'ArrowDown' ? 40 : -40)));
+              }
+            }}
+          ><Grip className="size-4" /></button>
         </div>
       )}
     </Card>

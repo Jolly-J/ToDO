@@ -72,7 +72,7 @@ export default function GanttTreePane({
             {row.isCritical ? (
               <span className="shrink-0 rounded-sm bg-[#FEE2E2] px-1 text-[10px] text-[#DC2626]">紧急</span>
             ) : null}
-            <span className="w-10 text-right text-xs text-[#9B9A97]">{row.progress}%</span>
+            <span className="w-10 text-right text-xs text-[#9B9A97]" title={`时间进度：${row.progress}%`}>{row.progress}%</span>
           </div>
         );
       })}

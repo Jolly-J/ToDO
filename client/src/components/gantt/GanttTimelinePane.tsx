@@ -55,6 +55,7 @@ export default function GanttTimelinePane({
               item={row}
               leftPx={placement.leftPx}
               widthPx={placement.widthPx}
+              maxWidthPx={totalWidth - placement.leftPx}
               rowHeight={rowHeight}
               onClick={onClickTask}
             />

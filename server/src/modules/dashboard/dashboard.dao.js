@@ -8,6 +8,27 @@
 const { getDb } = require('../../db/sqlite');
 const { todayDate, daysAgoDate } = require('../../utils/datetime');
 
+// 团队统计和卡片明细共用任务可见范围，不能信任客户端传入的 scope=all。
+function resolveTeamScope(teamId, userId) {
+  const row = getDb().prepare(`
+    SELECT t.owner_id, t.is_archived, tm.role_id, tm.task_visibility_scope
+    FROM teams t
+    LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ?
+    WHERE t.id = ?
+  `).get(userId || '', teamId);
+  if (!row || row.is_archived) {
+    throw Object.assign(new Error('团队不存在或已解散'), { status: 404, code: 'TEAM_NOT_FOUND' });
+  }
+  const isSuperAdmin = userId && require('../../services/permissionCache').isSuperAdmin(userId);
+  if (isSuperAdmin || row.owner_id === userId || row.role_id === 'owner' || row.role_id === 'admin') {
+    return 'all';
+  }
+  if (!userId || !row.role_id) {
+    throw Object.assign(new Error('无权限访问团队'), { status: 403, code: 'FORBIDDEN' });
+  }
+  return row.task_visibility_scope === 'self' ? 'self' : 'all';
+}
+
 /**
  * 构建数据范围 WHERE 条件
  */
@@ -15,6 +36,7 @@ function buildScopeWhere(context) {
   const { scope, userId, teamId, startDate, endDate } = context;
   const conditions = ['t.is_deleted = 0'];
   const params = [];
+  const effectiveScope = teamId ? resolveTeamScope(teamId, userId) : scope;
 
   if (teamId) {
     conditions.push('t.team_id = ?');
@@ -31,7 +53,7 @@ function buildScopeWhere(context) {
     params.push(endDate);
   }
 
-  if (scope === 'self' && userId) {
+  if (effectiveScope === 'self' && userId) {
     conditions.push('(t.creator_id = ? OR t.assignee_id = ? OR t.participant_ids LIKE ?)');
     params.push(userId, userId, `%"${userId}"%`);
   }

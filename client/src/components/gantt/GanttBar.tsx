@@ -9,6 +9,7 @@ interface GanttBarProps {
   leftPx: number;
   widthPx: number;
   rowHeight: number;
+  maxWidthPx?: number;
   onClick?: (item: GanttItem) => void;
 }
 
@@ -25,10 +26,11 @@ export default function GanttBar({
   leftPx,
   widthPx,
   rowHeight,
+  maxWidthPx = Infinity,
   onClick,
 }: GanttBarProps) {
   const left = leftPx;
-  const width = Math.max(widthPx - 4, 16);
+  const width = Math.min(Math.max(widthPx - 4, 16), Math.max(1, maxWidthPx));
   const baseColor = STATUS_COLOR[item.status] ?? '#2383E2';
   const isOverdue = item.isDelayed;
   const isCritical = item.isCritical;
