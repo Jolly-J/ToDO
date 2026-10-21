@@ -401,6 +401,54 @@
   padding: 0 0.25rem;
 }
 
+/* 团队驾驶舱打印预览：遮罩淡入淡出 + 内容面板轻微上移，保持与全局弹层一致的节奏 */
+@keyframes print-preview-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes print-preview-out {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes print-preview-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.995);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes print-preview-panel-out {
+  from {
+    opacity: 1;
+    transform: none;
+  }
+  to {
+    opacity: 0;
+    transform: translateY(8px) scale(0.998);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-print-preview],
+  [data-print-preview-panel] {
+    animation-duration: 1ms !important;
+  }
+}
+
 @keyframes dialog-content-in {
   from {
     opacity: 0;

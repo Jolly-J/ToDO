@@ -18,25 +18,24 @@ import {
   GanttTimelineHeader,
   GanttTreePane,
   GanttTimelinePane,
-  buildGanttRows,
   getDateOffsetPx,
-  getItemGridPlacement,
   type GanttItem,
   type GanttScale,
-  type GanttGridPlacement,
 } from '@/components/gantt';
 import type { Task } from '@/types';
-import { buildTeamGanttLayout, getTimeProgress } from './teamGanttLayout';
+import { buildTeamGanttModel, type TeamGanttViewState } from './teamGanttModel';
 
 interface TeamGanttViewProps {
   tasks: Task[];
   onTaskClick?: (taskId: string) => void;
+  /** 甘特图显示属性变化时上报，供打印预览沿用用户当前设置。 */
+  onViewStateChange?: (state: TeamGanttViewState) => void;
 }
 
 const ROW_HEIGHT = 40;
 const LEFT_PANE_WIDTH = 280;
 
-export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps) {
+export default function TeamGanttView({ tasks, onTaskClick, onViewStateChange }: TeamGanttViewProps) {
   const [scale, setScale] = useState<GanttScale>('week');
   const [riskOnly, setRiskOnly] = useState(false);
   const [zoom, setZoom] = useState(100);
@@ -53,174 +52,32 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
 
   const todayStr = dayjs().format('YYYY-MM-DD');
 
-  // 1. 将任务及其潜在嵌套的 subtasks 进行扁平化
-  const flattenedTasks = useMemo(() => {
-    const map = new Map<string, Task>();
-    const walk = (task: Task, fallbackParentId?: string) => {
-      const pid = task.parent_id || fallbackParentId;
-      const normalized: Task = { ...task, parent_id: pid };
-      if (!map.has(normalized.id)) {
-        map.set(normalized.id, normalized);
-      }
-      if (task.subtasks && Array.isArray(task.subtasks)) {
-        task.subtasks.forEach((sub) => walk(sub, task.id));
-      }
-    };
-    tasks.forEach((t) => walk(t));
-    return Array.from(map.values());
-  }, [tasks]);
-
-  // 2. 根据状态筛选任务列表 (子任务命中时保留父任务作为树容器；父任务命中时连同子任务展示)
-  const filteredTasks = useMemo(() => {
-    const isSingleMatch = (task: Task): boolean => {
-      const isDone = task.status === 'done' || task.status === 'delayed_done';
-      const isOverdue =
-        task.status === 'delayed_in_progress' ||
-        Boolean(task.due_date && task.due_date.slice(0, 10) < todayStr && !isDone);
-
-      if (statusFilter === 'in_progress') {
-        if (task.status !== 'in_progress' && task.status !== 'delayed_in_progress') {
-          return false;
-        }
-      } else if (statusFilter === 'unfinished') {
-        if (isDone || task.status === 'canceled') {
-          return false;
-        }
-      } else if (statusFilter === 'overdue') {
-        if (!isOverdue) {
-          return false;
-        }
-      } else if (statusFilter === 'done') {
-        if (!isDone) {
-          return false;
-        }
-      }
-
-      return true;
-    };
-
-    const taskMap = new Map<string, Task>();
-    flattenedTasks.forEach((t) => taskMap.set(t.id, t));
-
-    const matchedIds = new Set<string>();
-    flattenedTasks.forEach((t) => {
-      if (isSingleMatch(t)) {
-        matchedIds.add(t.id);
-        // 子任务命中时，将其所有祖先父节点也加入，保持树完整性
-        let curPid = t.parent_id;
-        while (curPid && taskMap.has(curPid)) {
-          matchedIds.add(curPid);
-          curPid = taskMap.get(curPid)!.parent_id;
-        }
-      }
-    });
-
-    // 若父任务命中，也把子任务纳入
-    flattenedTasks.forEach((t) => {
-      if (t.parent_id && matchedIds.has(t.parent_id)) {
-        matchedIds.add(t.id);
-      }
-    });
-
-    return flattenedTasks.filter((t) => matchedIds.has(t.id));
-  }, [flattenedTasks, statusFilter, todayStr]);
-
-  // 3. 计算父节点集合（用于折叠/展开小箭头常驻判断）与节点深度
-  const { parentIds, depthMap } = useMemo(() => {
-    const pSet = new Set<string>();
-    const taskMap = new Map<string, Task>();
-    filteredTasks.forEach((t) => taskMap.set(t.id, t));
-
-    filteredTasks.forEach((t) => {
-      if (t.parent_id && taskMap.has(t.parent_id)) {
-        pSet.add(t.parent_id);
-      }
-    });
-
-    const dMap = new Map<string, number>();
-    const getDepth = (id: string, visited = new Set<string>()): number => {
-      if (dMap.has(id)) return dMap.get(id)!;
-      if (visited.has(id)) return 0;
-      visited.add(id);
-      const item = taskMap.get(id);
-      if (!item || !item.parent_id || !taskMap.has(item.parent_id)) {
-        dMap.set(id, 0);
-        return 0;
-      }
-      const d = getDepth(item.parent_id, visited) + 1;
-      dMap.set(id, d);
-      return d;
-    };
-
-    filteredTasks.forEach((t) => getDepth(t.id));
-    return { parentIds: pSet, depthMap: dMap };
-  }, [filteredTasks]);
-
-  // 4. 将筛选后的任务映射为甘特图行项
-  const ganttItems: GanttItem[] = useMemo(() => {
-    const taskMap = new Map<string, Task>();
-    filteredTasks.forEach((t) => taskMap.set(t.id, t));
-
-    return filteredTasks.map((task, index) => {
-      const isDone = task.status === 'done' || task.status === 'delayed_done';
-      const isOverdue =
-        task.status === 'delayed_in_progress' ||
-        Boolean(task.due_date && task.due_date.slice(0, 10) < todayStr && !isDone);
-      const isCritical = task.priority === 'urgent';
-
-      const startDate = task.start_date
-        ? task.start_date.slice(0, 10)
-        : (task.created_at ? task.created_at.slice(0, 10) : todayStr);
-      let dueDate = task.due_date ? task.due_date.slice(0, 10) : undefined;
-      if (!dueDate) {
-        dueDate = dayjs(startDate).add(3, 'day').format('YYYY-MM-DD');
-      }
-
-      const progress = getTimeProgress(startDate, dueDate, todayStr);
-
-      const hasValidParent = Boolean(task.parent_id && taskMap.has(task.parent_id));
-
-      return {
-        id: task.id,
-        taskId: task.id,
-        type: 'task',
-        parentId: hasValidParent ? (task.parent_id || undefined) : undefined,
-        name: task.title,
-        startDate,
-        dueDate,
-        progress,
-        status: task.status,
-        assigneeName: task.assignee_name,
-        isDelayed: isOverdue,
-        isCritical,
-        depth: depthMap.get(task.id) ?? 0,
-        sortOrder: index,
-      };
-    });
-  }, [filteredTasks, depthMap, todayStr]);
-
-  const allRows = useMemo(() => buildGanttRows(ganttItems), [ganttItems]);
-  const visibleRows = useMemo(
-    () => buildGanttRows(ganttItems, collapsedIds),
-    [collapsedIds, ganttItems]
-  );
-  const filteredRows = useMemo(() => {
-    if (!riskOnly) return visibleRows;
-    return visibleRows.filter((r) => r.isDelayed || r.isCritical);
-  }, [riskOnly, visibleRows]);
-
-  // 折叠只隐藏行，不改变全览范围；风险筛选则只覆盖命中的排期。
-  const rangeItems = useMemo(
-    () => riskOnly ? ganttItems.filter((item) => item.isDelayed || item.isCritical) : ganttItems,
-    [ganttItems, riskOnly]
-  );
-  const { units, renderScale, pxPerDay, timelineWidth, taskStart, taskEnd } = useMemo(
-    () => buildTeamGanttLayout({
-      items: rangeItems, scale, availableWidth: (containerWidth || 1000) - LEFT_PANE_WIDTH,
-      today: todayStr, zoom, fit,
+  // 1. 汇总任务筛选、折叠、风险过滤与时间轴布局；屏幕视图与打印预览共用同一套模型。
+  const model = useMemo(
+    () => buildTeamGanttModel({
+      tasks,
+      today: todayStr,
+      statusFilter,
+      riskOnly,
+      collapsedIds,
+      availableWidth: (containerWidth || 1000) - LEFT_PANE_WIDTH,
+      scale,
+      zoom,
+      fit,
     }),
-    [rangeItems, scale, containerWidth, todayStr, zoom, fit]
+    [tasks, todayStr, statusFilter, riskOnly, collapsedIds, containerWidth, scale, zoom, fit]
   );
+  const {
+    filteredRows,
+    parentIds,
+    units,
+    renderScale,
+    pxPerDay,
+    placements,
+    taskStart,
+    taskEnd,
+    timelineWidth,
+  } = model;
 
   // 滚动区可能在加载或筛选后才挂载；同时监听滚动条引起的可用宽度变化。
   const hasRows = filteredRows.length > 0;
@@ -234,14 +91,10 @@ export default function TeamGanttView({ tasks, onTaskClick }: TeamGanttViewProps
     return () => observer.disconnect();
   }, [hasRows]);
 
-  const placements = useMemo(() => {
-    const map = new Map<string, GanttGridPlacement>();
-    allRows.forEach((row) => {
-      const placement = getItemGridPlacement(row, units, pxPerDay);
-      if (placement.startIndex !== -1) map.set(row.id, placement);
-    });
-    return map;
-  }, [allRows, pxPerDay, units]);
+  // 把当前显示属性同步给驾驶舱，打印预览据此沿用用户已调整的筛选与折叠状态。
+  useEffect(() => {
+    onViewStateChange?.({ statusFilter, riskOnly, collapsedIds });
+  }, [statusFilter, riskOnly, collapsedIds, onViewStateChange]);
 
   const handleToggleCollapse = (id: string) => {
     setCollapsedIds((prev) => {

@@ -17,6 +17,7 @@ import TaskListView from './TaskListView';
 import TaskBoardView from './TaskBoardView';
 import TaskCalendarView from './TaskCalendarView';
 import TeamCockpitView from '@/pages/Teams/cockpit/TeamCockpitView';
+import type { TeamGanttViewState } from '@/pages/Teams/cockpit/teamGanttModel';
 import CreateTaskModal from '@/components/task/form/CreateTaskModal';
 import { useIsMobile } from '@/hooks/useIsMobile'; // [MOBILE ONLY]
 import { cn } from '@/lib/utils';
@@ -34,6 +35,8 @@ interface TaskWorkspaceProps {
   containerStyle?: CSSProperties;
   embedded?: boolean;
   isTeamAdmin?: boolean;
+  /** 驾驶舱甘特图显示属性变化时上报，供团队空间页头的打印入口使用。 */
+  onGanttViewStateChange?: (state: TeamGanttViewState) => void;
 }
 
 interface ResolvedTaskLink {
@@ -49,6 +52,7 @@ export default function TaskWorkspace({
   containerStyle,
   embedded = false,
   isTeamAdmin = false,
+  onGanttViewStateChange,
 }: TaskWorkspaceProps) {
   const isMobile = useIsMobile(); // [MOBILE ONLY]
   const currentView = useTaskStore((state) => state.currentView);
@@ -222,6 +226,7 @@ export default function TaskWorkspace({
                 toolbarStart={viewSwitch}
                 toolbarEnd={embedded ? createAction : undefined}
                 onTaskClick={handleTaskClick}
+                onGanttViewStateChange={onGanttViewStateChange}
               />
             )}
           </div>

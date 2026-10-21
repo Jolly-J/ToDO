@@ -3,13 +3,14 @@
  * 文件作用：团队管理员专用的统一管控看板。
  * 主要功能：
  *   1. 顶部展示团队工作台 KPI 卡片 (复用 StatCards)；
- *   2. 中部展示团队任务甘特图 (TeamGanttView)；
+ *   2. 中部展示团队任务甘特图 (TeamGanttView)，并把显示属性上报给团队空间页头；
  *   3. 下部展示团队成员任务情况面板 (TeamMemberTaskStatus)。
  */
 import React from 'react';
 import StatCards from '@/pages/Dashboard/StatCards';
 import TeamGanttView from './TeamGanttView';
 import TeamMemberTaskStatus from './TeamMemberTaskStatus';
+import type { TeamGanttViewState } from './teamGanttModel';
 import type { Task } from '@/types';
 
 interface TeamCockpitViewProps {
@@ -19,6 +20,8 @@ interface TeamCockpitViewProps {
   toolbarEnd?: React.ReactNode;
   onTaskClick?: (taskId: string) => void;
   onSelectMember?: (userId: string) => void;
+  /** 甘特图筛选、风险过滤与折叠状态变化时上报，供打印预览沿用。 */
+  onGanttViewStateChange?: (state: TeamGanttViewState) => void;
 }
 
 export default function TeamCockpitView({
@@ -28,6 +31,7 @@ export default function TeamCockpitView({
   toolbarEnd,
   onTaskClick,
   onSelectMember,
+  onGanttViewStateChange,
 }: TeamCockpitViewProps) {
   return (
     <div className="w-full min-w-0">
@@ -49,7 +53,11 @@ export default function TeamCockpitView({
         {/* 2. 中部任务甘特图 */}
         <section>
           <div className="text-sm font-semibold text-[#37352F] mb-3">任务排期甘特图</div>
-          <TeamGanttView tasks={tasks} onTaskClick={onTaskClick} />
+          <TeamGanttView
+            tasks={tasks}
+            onTaskClick={onTaskClick}
+            onViewStateChange={onGanttViewStateChange}
+          />
         </section>
 
         {/* 3. 下部团队成员任务情况 */}

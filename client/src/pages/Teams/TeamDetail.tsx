@@ -3,12 +3,14 @@
  * 文件作用：展示单个团队的任务协作空间。
  * 主要功能：查看团队任务工作区，并进入团队设置页。
  */
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Settings, HelpCircle } from 'lucide-react';
-import { useTeamStore, useAuthStore } from '@/store';
+import { Settings, HelpCircle, Printer } from 'lucide-react';
+import { useTeamStore, useAuthStore, useTaskStore } from '@/store';
 import { useTourStore } from '@/components/onboarding/tourStore';
 import TaskWorkspace from '@/pages/Tasks/TaskWorkspace';
+import CockpitPrintPreview from '@/pages/Teams/cockpit/print/CockpitPrintPreview';
+import type { TeamGanttViewState } from '@/pages/Teams/cockpit/teamGanttModel';
 import { pageHeaderStyles } from '@/pages/pageHeaderStyles';
 import { teamLevelLabels } from '@/pages/Teams/teamMeta';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,14 @@ export default function TeamDetail() {
   const { currentTeam, fetchTeamDetail, fetchMembers, members } = useTeamStore();
   const user = useAuthStore((state) => state.user);
   const openTour = useTourStore((state) => state.openTour);
+  const currentView = useTaskStore((state) => state.currentView);
+  const tasks = useTaskStore((state) => state.tasks);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [ganttViewState, setGanttViewState] = useState<TeamGanttViewState>({
+    statusFilter: 'in_progress',
+    riskOnly: false,
+    collapsedIds: new Set(),
+  });
 
   useEffect(() => {
     if (id) {
@@ -41,6 +51,9 @@ export default function TeamDetail() {
   );
 
   if (!currentTeam) return null;
+
+  // 打印入口只在驾驶舱视图且具备团队管理权限时出现，与设置按钮同排。
+  const showPrintAction = isTeamAdmin && currentView === 'cockpit';
 
   return (
     <div>
@@ -78,6 +91,12 @@ export default function TeamDetail() {
           <p style={pageHeaderStyles.meta}>查看团队空间中的任务与协作情况</p>
         </div>
         <div style={pageHeaderStyles.actions}>
+          {showPrintAction ? (
+            <Button onClick={() => setPrintOpen(true)}>
+              <Printer className="h-4 w-4" />
+              打印此页
+            </Button>
+          ) : null}
           <Button
             data-tour="team-workspace-settings"
             variant="outline"
@@ -90,7 +109,25 @@ export default function TeamDetail() {
       </div>
 
       {id ? (
-        <TaskWorkspace teamId={id} title="任务" containerStyle={{ minWidth: 0 }} embedded isTeamAdmin={isTeamAdmin} />
+        <TaskWorkspace
+          teamId={id}
+          title="任务"
+          containerStyle={{ minWidth: 0 }}
+          embedded
+          isTeamAdmin={isTeamAdmin}
+          onGanttViewStateChange={setGanttViewState}
+        />
+      ) : null}
+
+      {printOpen ? (
+        <CockpitPrintPreview
+          onClose={() => setPrintOpen(false)}
+          teamId={id || currentTeam.id}
+          teamName={currentTeam.name}
+          teamLevelLabel={teamLevelLabels[currentTeam.level] || currentTeam.level}
+          tasks={tasks}
+          viewState={ganttViewState}
+        />
       ) : null}
     </div>
   );

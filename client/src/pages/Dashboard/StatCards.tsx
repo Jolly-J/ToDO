@@ -4,22 +4,14 @@
  * 主要功能：按团队筛选驾驶舱统计数据，并呈现总数、未完成、进行中、已完成和超期指标。
  *          点击卡片可弹出对应状态的任务列表弹窗。
  */
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { LayoutGrid, Clock, RefreshCw, CheckCircle, AlertTriangle } from 'lucide-react';
-import request from '@/api/request';
 import StatCardTaskDialog from './StatCardTaskDialog';
+import { useDashboardStats, type DashboardStats } from './useDashboardStats';
 import { useIsMobile } from '@/hooks/useIsMobile'; // [MOBILE ONLY]
 import { cn } from '@/lib/utils';
 
 export type DashboardCardKey = 'total' | 'unfinished' | 'inProgress' | 'done' | 'overdue';
-
-interface DashboardStats {
-  total: number;
-  unfinished: number;
-  inProgress: number;
-  done: number;
-  overdue: number;
-}
 
 const statCards: { key: DashboardCardKey; title: string; icon: React.ReactNode; iconColor: string }[] = [
   { key: 'total',      title: '全部任务', icon: <LayoutGrid className="h-5 w-5" />,   iconColor: '#787774' },
@@ -45,30 +37,15 @@ interface StatCardsProps {
 
 export default function StatCards({ teamId, days }: StatCardsProps) {
   const isMobile = useIsMobile(); // [MOBILE ONLY]
-  const [stats, setStats] = useState<DashboardStats>({ total: 0, unfinished: 0, inProgress: 0, done: 0, overdue: 0 });
-  const [loading, setLoading] = useState(true);
+  const { stats, loading } = useDashboardStats(teamId, days);
   const [fadeIn, setFadeIn] = useState(true);
   const [activeCard, setActiveCard] = useState<{ key: DashboardCardKey; title: string } | null>(null);
 
   useEffect(() => {
-    async function fetchStats() {
-      setFadeIn(false);
-      try {
-        const query = new URLSearchParams();
-        if (teamId) query.set('team_id', teamId);
-        if (days) query.set('days', String(days));
-        const qs = query.toString();
-        const data = await request.get<DashboardStats>(`/dashboard/stats${qs ? `?${qs}` : ''}`);
-        setStats(data);
-        setLoading(false);
-        // 等 opacity:0 渲染完成后再触发淡入
-        setTimeout(() => setFadeIn(true), 30);
-      } catch {
-        setLoading(false);
-      }
-    }
-    fetchStats();
-  }, [teamId, days]);
+    // 数据变化时先隐藏再延迟淡入，避免数字瞬切；用定时器异步更新，避免 effect 内同步 setState。
+    const timer = setTimeout(() => setFadeIn(!loading), loading ? 0 : 30);
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   return (
     <>

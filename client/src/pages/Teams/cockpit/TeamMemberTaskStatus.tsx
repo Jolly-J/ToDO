@@ -3,27 +3,14 @@
  * 文件作用：在团队驾驶舱中展示所有成员的任务负荷与完成情况。
  * 主要功能：请求 /api/teams/:id/cockpit/member-tasks 并在网格卡片中呈现成员任务数、逾期数、进行中及完成率。
  */
-import { useEffect, useState } from 'react';
 import { Users, AlertTriangle, ShieldAlert } from 'lucide-react';
-import request from '@/api/request';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
+import { useMemberTaskStats } from './useMemberTaskStats';
 
-export interface MemberTaskStat {
-  userId: string;
-  name: string;
-  avatar?: string;
-  department?: string;
-  role: 'owner' | 'admin' | 'member';
-  assignedTaskCount: number;
-  openTaskCount: number;
-  overdueTaskCount: number;
-  urgentTaskCount: number;
-  completedTaskCount: number;
-  completionRate: number;
-}
+export type { MemberTaskStat } from './useMemberTaskStats';
 
 interface TeamMemberTaskStatusProps {
   teamId: string;
@@ -37,36 +24,7 @@ const ROLE_LABEL: Record<string, string> = {
 };
 
 export default function TeamMemberTaskStatus({ teamId, onSelectMember }: TeamMemberTaskStatusProps) {
-  const [loading, setLoading] = useState(true);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [memberStats, setMemberStats] = useState<MemberTaskStat[]>([]);
-
-  useEffect(() => {
-    let cancelled = false;
-    async function fetchStats() {
-      setLoading(true);
-      setErrorMsg(null);
-      try {
-        const data = await request.get<MemberTaskStat[]>(`/teams/${teamId}/cockpit/member-tasks`);
-        if (!cancelled) {
-          setMemberStats(data || []);
-          setLoading(false);
-        }
-      } catch (err: any) {
-        if (!cancelled) {
-          setErrorMsg(err?.message || '获取团队成员任务统计失败');
-          setLoading(false);
-        }
-      }
-    }
-
-    if (teamId) {
-      fetchStats();
-    }
-    return () => {
-      cancelled = true;
-    };
-  }, [teamId]);
+  const { loading, errorMsg, memberStats } = useMemberTaskStats(teamId);
 
   if (loading) {
     return (
