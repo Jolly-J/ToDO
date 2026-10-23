@@ -31,6 +31,7 @@ request.interceptors.request.use((config) => {
 // 响应拦截器：统一错误处理 + 解包 data
 request.interceptors.response.use(
   (response) => {
+    if (response.config?.signal?.aborted) return Promise.reject(new axios.CanceledError());
     const method = String(response.config?.method || 'get').toLowerCase();
     if (import.meta.env.DEV && mutationMethods.has(method)) {
       console.info('[save][response]', {
@@ -53,6 +54,7 @@ request.interceptors.response.use(
     return data;
   },
   (error) => {
+    if (axios.isCancel(error) || error.config?.signal?.aborted) return Promise.reject(error);
     const method = String(error.config?.method || 'get').toLowerCase();
     if (import.meta.env.DEV && mutationMethods.has(method)) {
       console.error('[save][error]', {

@@ -7,7 +7,7 @@ const express = require('express');
 const fs = require('node:fs');
 const taskDao = require('../db/taskDao');
 const commentDao = require('../db/commentDao');
-const { upload } = require('../middlewares/upload');
+const { authorizedTaskUpload } = require('../modules/attachment/attachment.upload');
 const attachmentDao = require('../modules/attachment/attachment.dao');
 const notificationAggregation = require('../modules/notification/notification.aggregation');
 const notificationEvents = require('../modules/notification/notification.events');
@@ -587,7 +587,7 @@ router.patch('/:id/status', (req, res) => {
 });
 
 
-router.post('/:taskId/attachments', upload.array('files', 5), (req, res) => {
+router.post('/:taskId/attachments', authorizedTaskUpload({ taskParam: 'taskId', multiple: true }), (req, res) => {
   const currentUserId = resolveCurrentUserId(req);
   const taskId = req.params.taskId;
   if (rejectIfShareReadonly(req, res, taskId)) {

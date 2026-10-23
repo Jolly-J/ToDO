@@ -26,7 +26,13 @@ async function initDb() {
   }
 
   // 1. 执行数据库迁移
-  const migrationResult = await runMigrations();
+  let migrationResult;
+  try {
+    migrationResult = await runMigrations();
+  } finally {
+    // 失败同样释放迁移连接，避免启动失败后仍持有 SQLite 连接或锁。
+    await closeKnex();
+  }
 
   if (!migrationResult.success) {
     logger.error('数据库迁移失败，服务启动终止', {
@@ -35,9 +41,6 @@ async function initDb() {
     });
     throw migrationResult.error;
   }
-
-  // 关闭 Knex 连接（释放 sqlite3 驱动）
-  await closeKnex();
 
   // 2. 获取 better-sqlite3 实例（业务代码使用同步 API）
   const db = getDb();

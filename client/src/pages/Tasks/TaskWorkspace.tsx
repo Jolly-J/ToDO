@@ -66,6 +66,8 @@ export default function TaskWorkspace({
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
 
+  useEffect(() => () => useTaskStore.getState().cancelCollectionFetch(), [teamId]);
+
   // [MOBILE ADAPTATION] 移动端强制设为列表视图
   useEffect(() => {
     if (isMobile && currentView !== 'list') {

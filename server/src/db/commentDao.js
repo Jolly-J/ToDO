@@ -39,6 +39,7 @@ const commentAttachmentDao = {
    * 创建评论附件（暂不关联评论，保留物理文件）
    */
   createPending(file, taskId, userId) {
+    require('../modules/attachment/attachment.access').assertTaskWritable(taskId, userId);
     const db = getDb();
     const id = `catt-${generateId()}`;
     const now = nowIso();
@@ -69,9 +70,22 @@ const commentAttachmentDao = {
   attachToComment(attachmentIds, commentId) {
     if (!attachmentIds?.length) return;
     const db = getDb();
-    const placeholders = attachmentIds.map(() => '?').join(',');
-    db.prepare(`UPDATE comment_attachments SET comment_id = ? WHERE id IN (${placeholders})`)
-      .run(commentId, ...attachmentIds);
+    const comment = db.prepare('SELECT task_id, user_id FROM comments WHERE id = ?').get(commentId);
+    if (!comment) throw Object.assign(new Error('评论不存在'), { status: 400 });
+    require('../modules/attachment/attachment.access').assertTaskWritable(comment.task_id, comment.user_id);
+    if (!Array.isArray(attachmentIds) || attachmentIds.some(id => typeof id !== 'string')) {
+      throw Object.assign(new Error('附件参数不合法'), { status: 400 });
+    }
+    const ids = [...new Set(attachmentIds)];
+    const bind = db.transaction(() => {
+      for (const id of ids) {
+        const result = db.prepare(`UPDATE comment_attachments SET comment_id = ?
+          WHERE id = ? AND task_id = ? AND user_id = ? AND comment_id IS NULL`)
+          .run(commentId, id, comment.task_id, comment.user_id);
+        if (result.changes !== 1) throw Object.assign(new Error('附件不可关联：必须是本人在当前任务上传的未绑定附件'), { status: 403 });
+      }
+    });
+    bind();
   },
 
   /**
@@ -95,10 +109,7 @@ const commentAttachmentDao = {
     const task = require('./taskDao').findById(attachment.task_id, { includeDeleted: true });
     if (!task) return null;
 
-    const canDeletedAccess = require('./taskDao').isTaskDeleted(task) && task.deleted_by === userId;
-    const canVisibleAccess = !require('./taskDao').isTaskDeleted(task) && require('./taskDao').canUserAccessVisibleTask(task, userId);
-
-    if (!canDeletedAccess && !canVisibleAccess) return null;
+    if (!require('../modules/attachment/attachment.access').canReadTaskAttachments(task, userId)) return null;
 
     // 检查物理文件是否存在
     if (!attachment.physical_path || !fs.existsSync(attachment.physical_path)) {
@@ -117,6 +128,7 @@ const commentAttachmentDao = {
       .get(attachmentId, userId);
 
     if (!attachment) return false;
+    require('../modules/attachment/attachment.access').assertTaskWritable(attachment.task_id, userId);
 
     // 删除物理文件
     if (attachment.physical_path && fs.existsSync(attachment.physical_path)) {

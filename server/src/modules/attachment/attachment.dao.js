@@ -10,6 +10,7 @@ const taskDao = require('../../db/taskDao');
 const { normalizeAttachmentRecord, normalizeUploadedOriginalName } = require('./attachment.filename');
 
 function createAttachment(reqFile, taskId, userId) {
+  require('./attachment.access').assertTaskWritable(taskId, userId);
   const db = getDb();
   const id = `att-${generateId()}`;
   const now = nowIso();
@@ -45,10 +46,7 @@ function resolveDownload(attachmentId, userId) {
   const task = taskDao.findById(attachment.task_id, { includeDeleted: true });
   if (!task) return null;
 
-  const canDeletedAccess = taskDao.isTaskDeleted(task) && task.deleted_by === userId;
-  const canVisibleAccess = !taskDao.isTaskDeleted(task) && taskDao.canUserAccessVisibleTask(task, userId);
-  
-  if (!canDeletedAccess && !canVisibleAccess) {
+  if (!require('./attachment.access').canReadTaskAttachments(task, userId)) {
     return null;
   }
 
@@ -70,6 +68,7 @@ function deleteAttachment(attachmentId, userId) {
     throw err;
   }
 
+  if (attachment.task_id) require('./attachment.access').assertTaskWritable(attachment.task_id, userId);
   db.prepare('DELETE FROM task_attachments WHERE id = ?').run(attachmentId);
   
   // 物理删除 (不阻断主流程报错)
@@ -127,6 +126,7 @@ function createPending(reqFile, userId) {
  */
 function attachToTask(attachmentIds, taskId, userId) {
   if (!attachmentIds?.length) return;
+  require('./attachment.access').assertTaskWritable(taskId, userId);
   const db = getDb();
   const stmt = db.prepare(
     'UPDATE task_attachments SET task_id = ? WHERE id = ? AND user_id = ? AND task_id IS NULL'

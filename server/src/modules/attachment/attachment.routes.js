@@ -5,7 +5,7 @@
 const { Router } = require('express');
 const { auth } = require('../../middlewares/auth');
 const { success } = require('../../utils/response');
-const { createUploader, upload, validateUploadedFile } = require('../../middlewares/upload');
+const { upload, validateUploadedFile } = require('../../middlewares/upload');
 const attachmentDao = require('./attachment.dao');
 const { commentAttachmentDao } = require('../../db/commentDao');
 const notificationAggregation = require('../notification/notification.aggregation');
@@ -14,9 +14,10 @@ const fs = require('fs');
 const path = require('path');
 const { buildAttachmentContentDisposition } = require('./attachment.filename');
 const taskDao = require('../../db/taskDao');
+const { authorizedTaskUpload } = require('./attachment.upload');
 
 const router = Router();
-const richTextImageUpload = createUploader({ dest: 'server/data/rich-text-images' });
+const richTextImageUpload = authorizedTaskUpload({ dest: 'server/data/rich-text-images' });
 const richTextImageRoot = path.resolve(__dirname, '../../../data/rich-text-images');
 const allowedRichTextImageMimeTypes = new Set(['image/gif', 'image/jpeg', 'image/png', 'image/webp']);
 const allowedRichTextImageExts = new Set(['.gif', '.jpeg', '.jpg', '.png', '.webp']);
@@ -85,7 +86,7 @@ router.post('/task-attachments/pending', upload.single('file'), (req, res) => {
 /**
  * 附件上传 (10MB 限制，自动关联任务)
  */
-router.post('/upload', upload.single('file'), (req, res) => {
+router.post('/upload', authorizedTaskUpload(), (req, res) => {
   const { taskId } = req.body;
   if (taskId && rejectIfShareReadonly(req, res, taskId)) {
     if (req.file?.path && fs.existsSync(req.file.path)) {
@@ -121,7 +122,7 @@ router.post('/upload', upload.single('file'), (req, res) => {
  * 评论附件上传 (10MB 限制，暂不关联评论，保留物理文件)
  * 前端先上传附件获得 ID，提交评论时再关联
  */
-router.post('/comment-attachments', upload.single('file'), (req, res) => {
+router.post('/comment-attachments', authorizedTaskUpload(), (req, res) => {
   const { taskId } = req.body;
   if (taskId && rejectIfShareReadonly(req, res, taskId)) {
     if (req.file?.path && fs.existsSync(req.file.path)) {
@@ -158,7 +159,7 @@ router.post('/comment-attachments', upload.single('file'), (req, res) => {
  *
  * 图片保存在项目目录 server/data/rich-text-images，并返回可写入 Markdown 的项目相对 URL。
  */
-router.post('/rich-text-images', richTextImageUpload.single('file'), (req, res) => {
+router.post('/rich-text-images', richTextImageUpload, (req, res) => {
   const { taskId } = req.body;
   if (taskId && rejectIfShareReadonly(req, res, taskId)) {
     removeUploadedFile(req.file);

@@ -9,6 +9,7 @@ const { getDb } = require('./sqlite');
 const { generateId } = require('../utils/uuid');
 const { nowIso, todayDate, isOverdue } = require('../utils/datetime');
 const userDao = require('./userDao');
+const { createTaskReadContext } = require('./taskReadContext');
 const { stakeholderCache } = require('../modules/notification/notification.cache');
 const notificationAggregation = require('../modules/notification/notification.aggregation');
 const notificationEvents = require('../modules/notification/notification.events');
@@ -153,29 +154,33 @@ function isTaskRelated(task, userId) {
 }
 
 function getTeamMemberTaskVisibilityScope(userId, teamId) {
-  if (!userId || !teamId) return 'all';
+  if (!userId || !teamId) return 'none';
+  if (require('../services/permissionCache').isSuperAdmin(userId)) return 'all';
 
   const db = getDb();
   const row = db.prepare(`
     SELECT
       t.owner_id,
-      tm.role_id,
+      tm.user_id,
+      COALESCE(tr.code, tm.role_id) AS role_id,
       tm.task_visibility_scope
     FROM teams t
     LEFT JOIN team_members tm ON tm.team_id = t.id AND tm.user_id = ?
+    LEFT JOIN team_roles tr ON tr.id = tm.role_id OR tr.code = tm.role_id
     WHERE t.id = ?
     LIMIT 1
   `).get(userId, teamId);
 
-  if (!row) return 'all';
+  if (!row) return 'none';
   if (row.owner_id === userId || row.role_id === 'owner' || row.role_id === 'admin') return 'all';
+  if (!row.user_id) return 'none';
   return row.task_visibility_scope === 'self' ? 'self' : 'all';
 }
 
 function buildTaskSelfVisibilityFilter(userId) {
   return {
-    condition: '(creator_id = ? OR assignee_id = ? OR participant_ids LIKE ?)',
-    params: [userId, userId, `%"${userId}"%`],
+    condition: "(creator_id = ? OR assignee_id = ? OR EXISTS (SELECT 1 FROM json_each(CASE WHEN json_valid(participant_ids) THEN participant_ids ELSE '[]' END) participant WHERE participant.value = ?))",
+    params: [userId, userId, userId],
   };
 }
 
@@ -250,7 +255,9 @@ function getTaskBreadcrumbs(taskId) {
   const db = getDb();
   const breadcrumbs = [];
   let current = db.prepare('SELECT id, title, parent_id FROM tasks WHERE id = ?').get(taskId);
-  while (current && current.parent_id) {
+  const visited = new Set([taskId]);
+  while (current && current.parent_id && !visited.has(current.parent_id)) {
+    visited.add(current.parent_id);
     const parent = db.prepare('SELECT id, title, parent_id FROM tasks WHERE id = ?').get(current.parent_id);
     if (!parent) break;
     breadcrumbs.unshift({ id: parent.id, title: parent.title });
@@ -281,45 +288,58 @@ function listSubtasks(parentTaskId, options = {}) {
     WHERE parent_id = ? AND is_deleted = 0
     ORDER BY sort_order ASC, created_at ASC
   `).all(parentTaskId);
-  return rows.map((row) => enrichTask(row, options));
+  const visible = options.userId ? rows.filter(row => canUserAccessVisibleTask(row, options.userId)) : [];
+  const visited = options.visited || new Set([parentTaskId]);
+  return visible.filter(row => !visited.has(row.id)).map(row => enrichTask(row, {
+    ...options,
+    readContext: undefined,
+    visited: new Set([...visited, row.id]),
+    includeAttachments: Boolean(options.includeAttachments && isTaskRelatedOrAdmin(row, options.userId)),
+  }));
 }
 
 /**
  * 丰富任务信息 (兼容旧 enrichTask)
  */
 function enrichTask(task, options = {}) {
-  const creator = buildMemberProfile(task.creator_id);
-  const deletedBy = task.deleted_by ? buildMemberProfile(task.deleted_by) : null;
-  const assignee = task.assignee_id ? buildMemberProfile(task.assignee_id) : null;
+  const ctx = options.readContext;
+  const profile = ctx ? ctx.profile : buildMemberProfile;
+  const creator = profile(task.creator_id);
+  const deletedBy = task.deleted_by ? profile(task.deleted_by) : null;
+  const assignee = task.assignee_id ? profile(task.assignee_id) : null;
   const pIds = uniqueIds(task.participant_ids);
-  const participants = pIds.map(buildMemberProfile).filter(Boolean);
-  const subtaskStats = getSubtaskStats(task.id);
-
-  return {
-    ...task,
-    parent_id: task.parent_id || null,
-    subtask_count: subtaskStats.subtask_count,
-    subtask_done_count: subtaskStats.subtask_done_count,
-    breadcrumbs: getTaskBreadcrumbs(task.id),
-    participant_ids: pIds,
-    is_deleted: isTaskDeleted(task),
-    creator_name: creator?.name,
-    creator_avatar: creator?.avatar,
-    team_name: getTeamName(task.team_id),
-    assignee_name: assignee?.name,
-    assignee_avatar: assignee?.avatar,
-    participants,
-    deleted_by_name: deletedBy?.name,
-    attachment_count: getAttachmentCount(task.id),
-    comment_count: getCommentCount(task.id),
-    my_relation_keys: buildMyTaskRelationKeys(task, options.userId),
-    my_role_labels: buildRoleLabels(task, options.userId),
+  const participants = pIds.map(profile).filter(Boolean);
+  const counts = ctx?.counts(task.id);
+  const subtaskStats = counts ? { subtask_count: counts.total, subtask_done_count: counts.done } : getSubtaskStats(task.id);
+  const loadFlags = () => ({
     can_view_team_members: task.team_id ? canUserViewTeamMembers(options.userId, task.team_id) : true,
     is_team_admin: options.userId ? (
       task.team_id
         ? (require('../services/permissionCache').isSuperAdmin(options.userId) || require('../services/permissionCache').hasTeamPermission(options.userId, task.team_id, 'team:task:edit_all'))
         : (task.creator_id === options.userId || require('../services/permissionCache').isSuperAdmin(options.userId))
     ) : false,
+  });
+
+  return {
+    ...task,
+    parent_id: task.parent_id || null,
+    subtask_count: subtaskStats.subtask_count,
+    subtask_done_count: subtaskStats.subtask_done_count,
+    breadcrumbs: ctx ? ctx.breadcrumbs(task) : getTaskBreadcrumbs(task.id),
+    participant_ids: pIds,
+    is_deleted: isTaskDeleted(task),
+    creator_name: creator?.name,
+    creator_avatar: creator?.avatar,
+    team_name: ctx ? ctx.teamName(task.team_id) : getTeamName(task.team_id),
+    assignee_name: assignee?.name,
+    assignee_avatar: assignee?.avatar,
+    participants,
+    deleted_by_name: deletedBy?.name,
+    attachment_count: counts ? counts.attachments : getAttachmentCount(task.id),
+    comment_count: counts ? counts.comments : getCommentCount(task.id),
+    my_relation_keys: buildMyTaskRelationKeys(task, options.userId),
+    my_role_labels: buildRoleLabels(task, options.userId),
+    ...(ctx && task.team_id ? ctx.flags(task.team_id, loadFlags) : loadFlags()),
     ...(options.includeAttachments ? { attachments: getAttachments(task.id) } : {}),
     ...(options.includeSubtasks ? { subtasks: listSubtasks(task.id, options) } : {}),
   };
@@ -800,6 +820,13 @@ function matchKeyword(keyword) {
 
 function listByTeam(teamId, filters = {}) {
   const db = getDb();
+  const visibility = getTeamMemberTaskVisibilityScope(filters.userId, teamId);
+  if (visibility === 'none') {
+    const error = new Error('非团队成员，无权读取团队任务');
+    error.status = 403;
+    error.code = 40302;
+    throw error;
+  }
   const conditions = ['team_id = ?', 'is_deleted = 0'];
   const params = [teamId];
 
@@ -814,7 +841,7 @@ function listByTeam(teamId, filters = {}) {
   if (filters.dueStartDate) { conditions.push('due_date >= ?'); params.push(filters.dueStartDate); }
   if (filters.dueEndDate) { conditions.push('due_date <= ?'); params.push(filters.dueEndDate); }
 
-  if (filters.userId && getTeamMemberTaskVisibilityScope(filters.userId, teamId) === 'self') {
+  if (visibility === 'self') {
     const scopeFilter = buildTaskSelfVisibilityFilter(filters.userId);
     conditions.push(scopeFilter.condition);
     params.push(...scopeFilter.params);
@@ -835,8 +862,9 @@ function listByTeam(teamId, filters = {}) {
   const sql = `SELECT * FROM tasks WHERE ${conditions.join(' AND ')} ${kw.condition} ORDER BY sort_order ASC, created_at DESC`;
   const list = db.prepare(sql).all(...params, ...kw.params);
 
+  const readContext = createTaskReadContext(list, filters.userId);
   return {
-    list: list.map(t => enrichTask(t, { userId: filters.userId })),
+    list: list.map(t => enrichTask(t, { userId: filters.userId, readContext })),
     total: list.length,
   };
 }
@@ -892,10 +920,10 @@ function canUserAccessVisibleTask(task, userId) {
   const permissionCache = require('../services/permissionCache');
   if (permissionCache.isSuperAdmin(userId)) return true;
 
-  // 团队成员均可查看本团队任务 (方案 B：基础信息透明)
-  const roleDao = require('./roleDao');
-  if (task.team_id && roleDao.isTeamMember(userId, task.team_id)) {
-    if (getTeamMemberTaskVisibilityScope(userId, task.team_id) === 'self') {
+  // owner 不依赖冗余成员记录；self 成员只能读取与自身相关的节点。
+  const scope = task.team_id ? getTeamMemberTaskVisibilityScope(userId, task.team_id) : 'none';
+  if (scope !== 'none') {
+    if (scope === 'self') {
       return isTaskRelated(task, userId);
     }
     return true;
@@ -959,7 +987,9 @@ function sortMyTasks(left, right) {
 }
 
 function listMyTasks(userId, filters = {}) {
-  const visibleTasks = listAllVisible();
+  // SQL 先收窄候选，精确关系仍由原过滤器判定；summary 保持不受界面筛选影响。
+  const scopeFilter = buildTaskSelfVisibilityFilter(userId);
+  const visibleTasks = getDb().prepare(`SELECT * FROM tasks WHERE is_deleted = 0 AND ${scopeFilter.condition}`).all(...scopeFilter.params);
   const summary = {
     all: filterByMyScope(visibleTasks, userId, 'all').length,
     assigned: filterByMyScope(visibleTasks, userId, 'assigned').length,
@@ -982,7 +1012,9 @@ function listMyTasks(userId, filters = {}) {
     list = list.filter(t => t.due_date && t.due_date <= filters.dueEndDate);
   }
 
-  list = list.slice().sort(sortMyTasks).map(t => enrichTask(t, { userId }));
+  list = list.slice().sort(sortMyTasks);
+  const readContext = createTaskReadContext(list, userId);
+  list = list.map(t => enrichTask(t, { userId, readContext }));
 
   return { list, total: list.length, summary };
 }
@@ -992,7 +1024,8 @@ function listDeletedBy(userId, filters = {}) {
   const kw = matchKeyword(String(filters.keyword || '').trim());
   const sql = `SELECT * FROM tasks WHERE is_deleted = 1 AND deleted_by = ? ${kw.condition} ORDER BY deleted_at DESC`;
   const list = db.prepare(sql).all(userId, ...kw.params);
-  return list.map(t => enrichTask(t, { userId }));
+  const readContext = createTaskReadContext(list, userId);
+  return list.map(t => enrichTask(t, { userId, readContext }));
 }
 
 function findTrashDetail(taskId, userId) {

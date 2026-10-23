@@ -66,10 +66,13 @@ function createUploader(options = {}) {
   };
 
   return multer({
-    storage,
+    storage: options.memory ? multer.memoryStorage() : storage,
     limits: {
       fileSize: 10 * 1024 * 1024, // 硬限制 10MB
       files: 5,                   // 单次最多 5 个文件
+      fields: 10,
+      fieldSize: 64 * 1024,
+      parts: 16,
     },
     fileFilter,
   });

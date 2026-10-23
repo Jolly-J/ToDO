@@ -61,6 +61,7 @@ export default function MyTasks() {
       dueStartDate: dueDateRange.startDate || undefined,
       dueEndDate: dueDateRange.endDate || undefined,
     });
+    return () => useTaskStore.getState().cancelCollectionFetch();
   }, [scope, status, keyword, dueDateRange, fetchMyTasks]);
 
   useEffect(() => {

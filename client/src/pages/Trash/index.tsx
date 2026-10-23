@@ -43,6 +43,7 @@ export default function Trash() {
 
   useEffect(() => {
     fetchTrashTasks({ keyword });
+    return () => useTaskStore.getState().cancelCollectionFetch();
   }, [keyword, fetchTrashTasks]);
 
   const handleRestore = async (taskId: string, event?: MouseEvent<HTMLElement>) => {

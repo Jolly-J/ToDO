@@ -48,6 +48,7 @@ interface TaskState {
   total: number;
   myTaskSummary: Record<MyTaskScope, number>;
   loading: boolean;
+  cancelCollectionFetch: () => void;
   currentView: TaskView;
   filters: TaskFilters;
   filtersByView: TeamTaskViewFilters;
@@ -108,6 +109,22 @@ function updateTaskCollections(taskId: string, updater: (task: Task) => Task) {
   });
 }
 
+// 所有共享集合使用同一请求序号，覆盖团队、我的任务和回收站切换。
+let collectionRequest = 0;
+let collectionController: AbortController | undefined;
+
+function invalidateCollectionRequest() {
+  collectionRequest++;
+  collectionController?.abort();
+  collectionController = undefined;
+}
+
+function beginCollectionRequest() {
+  invalidateCollectionRequest();
+  collectionController = new AbortController();
+  return { requestId: collectionRequest, signal: collectionController.signal };
+}
+
 export const useTaskStore = create<TaskState>((set, get) => ({
   tasks: [],
   taskDetails: {},
@@ -116,6 +133,10 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   total: 0,
   myTaskSummary: { all: 0, assigned: 0, participating: 0, created: 0, shared: 0 },
   loading: false,
+  cancelCollectionFetch: () => {
+    invalidateCollectionRequest();
+    set({ loading: false });
+  },
   currentView: 'list',
   filters: {},
   filtersByView: {
@@ -127,6 +148,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   activeTeamId: null,
 
   fetchTasks: async (teamId) => {
+    const { requestId, signal } = beginCollectionRequest();
     if (!teamId) {
       set({ loading: false });
       return;
@@ -136,6 +158,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     set({ activeTeamId: teamId });
     const { currentView, filtersByView } = get();
     const filters = filtersByView[currentView] || {};
+    const isCurrent = () => requestId === collectionRequest && get().currentView === currentView && get().filtersByView[currentView] === filtersByView[currentView];
     const params = new URLSearchParams();
     const viewParam = currentView === 'cockpit' || currentView === 'list' ? 'list' : currentView;
     params.append('view', viewParam);
@@ -148,17 +171,17 @@ export const useTaskStore = create<TaskState>((set, get) => ({
 
     try {
       if (currentView === 'board') {
-        const boardData = await request.get<BoardData>(`/teams/${teamId}/tasks?${params.toString()}`);
-        set({ boardData, loading: false });
+        const boardData = await request.get<BoardData>(`/teams/${teamId}/tasks?${params.toString()}`, { signal });
+        if (isCurrent()) set({ boardData, loading: false });
       } else if (currentView === 'calendar') {
-        const calendarData = await request.get<{ id: string; title: string; date: string; priority: TaskPriority; status: TaskStatus }[]>(`/teams/${teamId}/tasks?${params.toString()}`);
-        set({ calendarData, loading: false });
+        const calendarData = await request.get<{ id: string; title: string; date: string; priority: TaskPriority; status: TaskStatus }[]>(`/teams/${teamId}/tasks?${params.toString()}`, { signal });
+        if (isCurrent()) set({ calendarData, loading: false });
       } else {
-        const data = await request.get<{ list: Task[]; total: number }>(`/teams/${teamId}/tasks?${params.toString()}`);
-        set({ tasks: data.list, total: data.total, loading: false });
+        const data = await request.get<{ list: Task[]; total: number }>(`/teams/${teamId}/tasks?${params.toString()}`, { signal });
+        if (isCurrent()) set({ tasks: data.list, total: data.total, loading: false });
       }
     } catch {
-      set({ loading: false });
+      if (isCurrent()) set({ loading: false });
     }
   },
 
@@ -188,6 +211,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
   },
 
   fetchMyTasks: async (filters) => {
+    const { requestId, signal } = beginCollectionRequest();
     set({ loading: true });
     set({ activeTeamId: null });
     const params = new URLSearchParams();
@@ -203,22 +227,24 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         list: Task[];
         total: number;
         summary: Record<MyTaskScope, number>;
-      }>(`/my-tasks?${params.toString()}`);
-      set({ tasks: data.list, total: data.total, myTaskSummary: data.summary, loading: false });
+      }>(`/my-tasks?${params.toString()}`, { signal });
+      if (requestId === collectionRequest) set({ tasks: data.list, total: data.total, myTaskSummary: data.summary, loading: false });
     } catch {
-      set({ loading: false });
+      if (requestId === collectionRequest) set({ loading: false });
     }
   },
 
   fetchTrashTasks: async (filters) => {
+    const { requestId, signal } = beginCollectionRequest();
     set({ loading: true, activeTeamId: null });
     const params = new URLSearchParams();
     if (filters?.keyword) params.append('keyword', filters.keyword);
 
     try {
       const data = await request.get<{ list: Task[]; total: number }>(
-        `/tasks/trash${params.toString() ? `?${params.toString()}` : ''}`
+        `/tasks/trash${params.toString() ? `?${params.toString()}` : ''}`, { signal }
       );
+      if (requestId !== collectionRequest) return;
       set({
         tasks: data.list,
         total: data.total,
@@ -227,7 +253,7 @@ export const useTaskStore = create<TaskState>((set, get) => ({
         loading: false,
       });
     } catch {
-      set({ loading: false });
+      if (requestId === collectionRequest) set({ loading: false });
     }
   },
 
@@ -479,24 +505,36 @@ export const useTaskStore = create<TaskState>((set, get) => ({
     });
   },
 
-  setFilters: (filters) => set((state) => ({
-    filters,
-    filtersByView: {
-      ...state.filtersByView,
-      [state.currentView]: filters,
-    },
-  })),
-  setViewFilters: (view, filters) => set((state) => ({
-    filters: state.currentView === view ? filters : state.filters,
-    filtersByView: {
-      ...state.filtersByView,
-      [view]: filters,
-    },
-  })),
-  setView: (view) => set((state) => ({
-    currentView: view,
-    filters: state.filtersByView[view] || {},
-  })),
+  setFilters: (filters) => {
+    invalidateCollectionRequest();
+    set((state) => ({
+      loading: false,
+      filters,
+      filtersByView: {
+        ...state.filtersByView,
+        [state.currentView]: filters,
+      },
+    }));
+  },
+  setViewFilters: (view, filters) => {
+    if (get().currentView === view) invalidateCollectionRequest();
+    set((state) => ({
+      loading: state.currentView === view ? false : state.loading,
+      filters: state.currentView === view ? filters : state.filters,
+      filtersByView: {
+        ...state.filtersByView,
+        [view]: filters,
+      },
+    }));
+  },
+  setView: (view) => {
+    invalidateCollectionRequest();
+    set((state) => ({
+      loading: false,
+      currentView: view,
+      filters: state.filtersByView[view] || {},
+    }));
+  },
 
   getTaskById: (taskId) => {
     const { tasks, taskDetails, boardData } = get();

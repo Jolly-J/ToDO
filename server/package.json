@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/bootstrap/server.js",
     "dev": "node src/bootstrap/server.js",
-    "db:migrate": "knex migrate:latest",
+    "db:migrate": "node src/db/migrate.js",
     "db:migrate:make": "knex migrate:make",
     "db:rollback": "knex migrate:rollback",
     "db:status": "knex migrate:status"

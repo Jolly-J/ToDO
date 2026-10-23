@@ -12,6 +12,7 @@ const knexConfig = require('../../knexfile');
 const logger = require('../utils/logger');
 const path = require('node:path');
 const fs = require('node:fs');
+const { prepareDatabasePath } = require('./databasePath');
 
 let knexInstance = null;
 
@@ -20,6 +21,7 @@ let knexInstance = null;
  */
 function getKnex() {
   if (!knexInstance) {
+    prepareDatabasePath(knexConfig.connection.filename);
     knexInstance = knex(knexConfig);
   }
   return knexInstance;
@@ -109,7 +111,7 @@ async function runMigrations() {
     });
 
     // 使用 knex 的 latest 方法执行所有待执行的迁移
-    const [batchNo, migrations] = await knex.migrate.latest();
+    const [batchNo, migrations] = await runAtomicMigrations(knex);
 
     for (const migration of migrations) {
       const fileName = migration.name || migration.file || migration;
@@ -136,6 +138,31 @@ async function runMigrations() {
     });
     result.error = err;
     return result;
+  }
+}
+
+/** 同一连接在事务前关闭外键，历史重建和迁移账本一起提交；失败一起回滚。 */
+async function runAtomicMigrations(knex) {
+  const connection = await knex.client.acquireConnection();
+  try {
+    await knex.raw('PRAGMA foreign_keys = OFF').connection(connection);
+    const result = await knex.transaction(async trx => {
+      const existingViolations = await trx.raw('PRAGMA foreign_key_check');
+      if (existingViolations.length) throw new Error('迁移前存在外键异常，停止升级，请先核对备份');
+      const migrated = await trx.migrate.latest();
+      const violations = await trx.raw('PRAGMA foreign_key_check');
+      if (violations.length) throw new Error('迁移后外键检查失败，全部回滚');
+      const integrity = await trx.raw('PRAGMA integrity_check');
+      if (integrity.some(row => row.integrity_check !== 'ok')) throw new Error('迁移后完整性检查失败，全部回滚');
+      return migrated;
+    }, { connection });
+    return result;
+  } finally {
+    try {
+      await knex.raw('PRAGMA foreign_keys = ON').connection(connection);
+    } finally {
+      await knex.client.releaseConnection(connection);
+    }
   }
 }
 
@@ -208,6 +235,7 @@ async function getMigrationStatus() {
 
 module.exports = {
   runMigrations,
+  runAtomicMigrations,
   rollbackMigration,
   getMigrationStatus,
   getKnex,
