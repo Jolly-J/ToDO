@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://todo.utmolight.xyz" target="_blank"><img src="https://img.shields.io/badge/官方宣传网站-todo.utmolight.xyz-2563EB?style=for-the-badge&logo=safari&logoColor=white" alt="Official Website" /></a>
+  <a href="https://todo.utmolight.xyz" target="_blank"><img src="https://img.shields.io/badge/官方宣传网站-todo.utmolight.xyz-2563EB.svg?logo=safari&logoColor=white" alt="Official Website" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License: MIT" /></a>
   <a href="https://nodejs.org"><img src="https://img.shields.io/badge/Node.js-%3E%3D18.0.0-brightgreen.svg" alt="Node.js Version" /></a>
   <a href="https://react.dev"><img src="https://img.shields.io/badge/React-19-blue.svg" alt="React 19" /></a>
